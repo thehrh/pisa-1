@@ -1,0 +1,10 @@
+{
+  "nuall_nc": "lambda cz: 0.307 * np.abs(cz)**0.782 + 0.827",
+  "nutau_cc": "lambda cz: 0.287 * np.abs(cz)**1.288 + 0.874",
+  "numubar_cc": "lambda cz: 0.301 * np.abs(cz)**0.552 + 0.806",
+  "nuebar_cc": "lambda cz: 0.350 * np.abs(cz)**0.922 + 0.818",
+  "nue_cc": "lambda cz: 0.350 * np.abs(cz)**0.922 + 0.818",
+  "nutaubar_cc": "lambda cz: 0.287 * np.abs(cz)**1.288 + 0.874",
+  "nuallbar_nc": "lambda cz: 0.307 * np.abs(cz)**0.782 + 0.827",
+  "numu_cc": "lambda cz: 0.301 * np.abs(cz)**0.552 + 0.806"
+}
