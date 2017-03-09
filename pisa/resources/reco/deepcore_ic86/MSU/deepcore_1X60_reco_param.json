@@ -1,0 +1,66 @@
+{
+  "nue_cc": {
+    "coszen": {
+      "fraction": "lambda E: np.array([0.5 if e < 21 else 0.01 for e in E])",
+      "loc1": "lambda E: np.array( [-0.00187*e + 0.0556 if e < 21 else -0.000744*e+0.0729 for e in E] )",
+      "width1": "lambda E: np.array( [-0.00320*e + 0.251 if e < 21 else -0.00174*e+0.310 for e in E] )",
+      "loc2": "lambda E: np.array( [-0.00374*e + 0.258 if e < 21 else -0.000744*e+0.0729 for e in E] )",
+      "width2": "lambda E: np.array( [0.000268*e + 0.437 if e < 21 else -0.00174*e+0.310 for e in E] )"
+    },
+    "energy": {
+      "fraction": "lambda E: np.array([0.4 if e < 21 else 0.01 for e in E])",
+      "loc1": "lambda E: np.array([ -0.260*e + 2.51 if e < 21 else 0.0565*e - 0.307 for e in E])",
+      "width1": "lambda E: np.array([ 0.247*e + 0.998 if e < 21 else 0.158*e + 5.00 for e in E])",
+      "loc2": "lambda E: np.array([ 0.00818*(e - 5.33)**2 + 5.60 if e < 21 else -0.0565*e - 0.307 for e in E])",
+      "width2": "lambda E: np.array([ -0.00922*(e - 22.4)**2 + 6.32 if e < 21 else 0.158*e + 5.00 for e in E])"
+    }
+  },
+  "nuall_nc": {
+    "coszen": {
+      "fraction": "lambda E: np.array([ 0.5 if e < 21 else 0.01 for e in E ])",
+      "loc1": "lambda E: np.array( [-0.000662*e + 0.0491 if e < 21 else -0.000665*e+0.109 for e in E] )",
+      "width1": "lambda E: np.array( [-0.000676*e + 0.250 if e < 21 else -0.00126*e+0.360 for e in E] )",
+      "loc2": "lambda E: np.array( [-0.00352*e + 0.309 if e < 21 else -0.000665*e+0.109 for e in E] )",
+      "width2": "lambda E: np.array( [0.000965*e + 0.429 if e < 21 else -0.00126*e+0.360 for e in E] )"
+    },
+    "energy": {
+      "fraction": "lambda E: np.array([0.4 if e < 21 else 0.01 for e in E])",
+      "loc1": "lambda E: np.array([-0.703*e + 3.54 if e < 21 else -0.607*e + 4.23 for e in E])",
+      "width1": "lambda E: np.array([0.120*e + 1.27 if e < 21 else 0.266*e + 0.769 for e in E])",
+      "loc2": "lambda E: np.array([-0.417*e + 6.20 if e < 21 else -0.607*e + 4.23  for e in E])",
+      "width2": "lambda E: np.array([0.142*e + 2.31 if e < 21 else 0.266*e + 0.769  for e in E])"
+    }
+  },
+  "numu_cc": {
+    "coszen": {
+      "fraction": "lambda E: np.array([0.5 if e < 21 else 0.01 for e in E])",
+      "loc1": "lambda E: np.array( [-0.00252*e + 0.0565 if e < 21 else 0.00000612*(e-64.4)**2+0.00344 for e in E] )",
+      "width1": "lambda E: np.array( [-0.00751*e + 0.262 if e < 21 else 0.0000416*(e-67.9)**2+0.0863 for e in E] )",
+      "loc2": "lambda E: np.array( [-0.00445*e + 0.236 if e < 21 else 0.00000612*(e-64.4)**2+0.00344 for e in E] )",
+      "width2": "lambda E: np.array( [0.0000417*e + 0.424 if e < 21 else 0.0000416*(e-67.9)**2+0.0863 for e in E] )"
+    },
+    "energy": {
+      "fraction": "lambda E: np.array([0.4 if e < 21 else 0.01 for e in E])",
+      "loc1": "lambda E: np.array([-0.190*e + 3.44 if e < 21 else -0.184*e + 5.20 for e in E])",
+      "width1": "lambda E: np.array([0.230*e + 1.32 if e < 21 else 0.154*e + 4.12 for e in E])",
+      "loc2": "lambda E: np.array([-0.00157*(e - 11.4)**2 + 7.08 if e < 21 else -0.184*e + 5.20 for e in E])",
+      "width2": "lambda E: np.array([0.309*e + 2.19 if e < 21 else 0.154*e + 4.12 for e in E])"
+    }
+  },
+  "nutau_cc": {
+    "coszen": {
+      "fraction": "lambda E: np.array([0.5 if e < 21 else 0.01 for e in E])",
+      "loc1": "lambda E: np.array( [-6.39*np.exp(-e/1.09) + 0.0428 if e < 21 else -0.000744*e+0.0864 for e in E] )",
+      "width1": "lambda E: np.array( [-0.00247*e + 0.254 if e < 21 else -0.00170*e+0.371 for e in E] )",
+      "loc2": "lambda E: np.array( [-0.00690*e + 0.327 if e < 21 else -0.000744*e+0.0864 for e in E] )",
+      "width2": "lambda E: np.array( [0.20 if e < 4 else -13.0*np.exp(-e/1.02) + 0.462 if e < 21 else -0.00170*e+0.371 for e in E] )"
+    },
+    "energy": {
+      "fraction": "lambda E: np.array([0.4 if e < 21 else 0.01 for e in E])",
+      "loc1": "lambda E: np.array([-0.580*e + 3.21 if e < 21 else -0.368*e + 1.13 for e in E])",
+      "width1": "lambda E: np.array([0.169*e + 1.12 if e < 21 else 0.261*e + 1.39 for e in E])",
+      "loc2": "lambda E: np.array([-0.274*e + 5.82 if e < 21 else -0.368*e + 1.13 for e in E])",
+      "width2": "lambda E: np.array([0.191*e + 2.14 if e < 21 else 0.261*e + 1.39 for e in E])"
+    }
+  }
+}
