@@ -1,19 +1,18 @@
 {
-  "numu_cc": {
-    "trck": "lambda E: 0.9*(1-np.exp((-0.2)*(E+0.6)))",
-    "cscd": "lambda E: 1.0 - 0.9*(1-np.exp((-0.2)*(E+0.6)))"
+  "numu_cc + numubar_cc": {
+    "track": "lambda E: 0.9*(1-np.exp((-0.2)*(E+0.6)))",
+    "cascade": "lambda E: 1.0 - 0.9*(1-np.exp((-0.2)*(E+0.6)))"
   },
-  "nuall_nc": {
-    "trck": "lambda E: 0.15*np.ones_like(E)",
-    "cscd": "lambda E: 1.0 - 0.15*np.ones_like(E)"
+  "nue_cc + nuebar_cc": {
+    "track": "lambda E: 0.15*np.ones_like(E)",
+    "cascade": "lambda E: 1.0 - 0.15*np.ones_like(E)"
   },
-  "nue_cc": {
-    "trck": "lambda E: 0.15*np.ones_like(E)",
-    "cscd": "lambda E: 1.0 - 0.15*np.ones_like(E)"
+  "nutau_cc + nutaubar_cc": {
+    "track": "lambda E: 0.25*np.ones_like(E)",
+    "cascade": "lambda E: 1.0 - 0.25*np.ones_like(E)"
   },
-  "nutau_cc": {
-    "trck": "lambda E: 0.25*np.ones_like(E)",
-    "cscd": "lambda E: 1.0 - 0.25*np.ones_like(E)"
+  "nuall_nc + nuallbar_nc": {
+    "track": "lambda E: 0.15*np.ones_like(E)",
+    "cascade": "lambda E: 1.0 - 0.15*np.ones_like(E)"
   }
 }
-
