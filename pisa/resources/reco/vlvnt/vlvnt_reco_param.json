@@ -1,58 +1,46 @@
 {
-  "nue_cc": {
-      "coszen": {
+  "nuall_cc+nuallbar_cc": {
+    "coszen": [
+      {
         "dist": "norm",
-        "fraction_norm": "lambda E: 1.0*np.ones_like(E)",
-        "loc_norm": "lambda E: np.zeros_like(E)",
-        "scale_norm": "lambda E: np.array([0.3/np.sqrt(e) + 0.05 for e in E])"
-      },
-      "energy": {
-        "dist": "gumbel_r",
-        "fraction": "lambda E: 1.0*np.ones_like(E)",
-        "loc": "lambda E: np.zeros_like(E)",
-        "scale": "lambda E: np.array([(0.4/np.sqrt(e) + 0.1)*e for e in E])"
+        "fraction": "lambda E: np.ones_like(E)",
+        "kwargs": {
+          "loc": "lambda E: np.zeros_like(E)",
+          "scale": "lambda E: 0.3/np.sqrt(E) + 0.05"
+        }
       }
-    },
-  "nuall_nc": {
-      "coszen": {
-        "dist": "norm",
-        "fraction": "lambda E: 1.0*np.ones_like(E)",
-        "loc": "lambda E: np.zeros_like(E)",
-        "scale": "lambda E: np.array([0.3/np.sqrt(e) + 0.05 for e in E])"
-      },
-      "energy": {
+    ],
+    "energy": [
+      {
         "dist": "gumbel_r",
-        "fraction": "lambda E: 1.0*np.ones_like(E)",
-        "loc": "lambda E: np.array([-0.6*e for e in E])",
-        "scale": "lambda E: np.array([(0.4/np.sqrt(e) + 0.1)*e for e in E])"
+        "fraction": "lambda E: np.ones_like(E)",
+        "kwargs": {
+          "loc": "lambda E: np.zeros_like(E)",
+          "scale": "lambda E: (0.4/np.sqrt(E) + 0.1)*E"
+        }
       }
+    ]
   },
-  "numu_cc": {
-      "coszen": {
+  "nuall_nc+nuallbar_nc": {
+    "coszen": [
+      {
         "dist": "norm",
-        "fraction": "lambda E: 1.0*np.ones_like(E)",
-        "loc": "lambda E: np.zeros_like(E)",
-        "scale": "lambda E: np.array([0.3/np.sqrt(e) + 0.05 for e in E])"
-      },
-      "energy": {
-        "dist": "gumbel_r",
-        "fraction": "lambda E: 1.0*np.ones_like(E)",
-        "loc": "lambda E: np.zeros_like(E)",
-        "scale": "lambda E: np.array([(0.4/np.sqrt(e) + 0.1)*e for e in E])"
+        "fraction": "lambda E: np.ones_like(E)",
+        "kwargs": {
+          "loc": "lambda E: np.zeros_like(E)",
+          "scale": "lambda E: 0.3/np.sqrt(E) + 0.05"
+        }
       }
-  },
-  "nutau_cc": {
-      "coszen": {
-        "dist": "norm",
-        "fraction": "lambda E: 1.0*np.ones_like(E)",
-        "loc": "lambda E: np.zeros_like(E)",
-        "scale": "lambda E: np.array([0.3/np.sqrt(e) + 0.05 for e in E])"
-      },
-      "energy": {
+    ],
+    "energy": [
+      {
         "dist": "gumbel_r",
-        "fraction": "lambda E: 1.0*np.ones_like(E)",
-        "loc": "lambda E: np.zeros_like(E)",
-        "scale": "lambda E: np.array([(0.4/np.sqrt(e) + 0.1)*e for e in E])"
+        "fraction": "lambda E: np.ones_like(E)",
+        "kwargs": {
+          "loc": "lambda E: -0.6*E",
+          "scale": "lambda E: (0.4/np.sqrt(E) + 0.1)*E"
+        }
       }
+    ]
   }
 }
