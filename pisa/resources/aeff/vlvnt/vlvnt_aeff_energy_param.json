@@ -1,6 +1,6 @@
 {
-  "nue_cc + numu_cc": "lambda E: 0.7*1e-38*6e23/0.92*1e12*1e-4*10*(1-np.exp((-0.4)*(E-1.0)))*E",
-  "nuebar_cc+numubar_cc": "lambda E: 0.35*1e-38*6e23/0.92*1e12*1e-4*10*(1-np.exp((-0.4)*(E-1.0)))*E",
+  "nue_cc + numu_cc": "lambda E: 0.7 * 1e-38 * 6e23/0.92 * 1e12 * 1e-4 * 10 * (1 - np.exp(-0.4 * (E - 1))) * E",
+  "nuebar_cc + numubar_cc": "lambda E: 0.35 * 1e-38 * 6e23/0.92 * 1e12 * 1e-4 * 10 * (1 - np.exp(-0.4 * (E - 1))) * E",
   "nutau_cc": {
     "energy": [
       3.5279553277948517,
@@ -113,6 +113,6 @@
       0.0010179775592991476
     ]
   },
-  "nuall_nc": "lambda E: 0.25*1e-38*6e23/0.92*1e12*1e-4*10*(1-np.exp((-0.1)*(E-1.0)))*E",
-  "nuallbar_nc": "lambda E: 0.125*1e-38*6e23/0.92*1e12*1e-4*10*(1-np.exp((-0.1)*(E-1.0)))*E"
+  "nuall_nc": "lambda E: 0.25 * 1e-38 * 6e23/0.92 * 1e12 * 1e-4 * 10 * (1 - np.exp(-0.1 * (E - 1))) * E",
+  "nuallbar_nc": "lambda E: 0.125 * 1e-38 * 6e23/0.92 * 1e12 * 1e-4 * 10 * (1 - np.exp(-0.1 * (E - 1))) * E"
 }
