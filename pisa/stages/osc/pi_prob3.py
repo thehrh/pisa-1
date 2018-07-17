@@ -43,7 +43,8 @@ class pi_prob3(PiStage):
     eps_emu : quantity (dimensionless)
     eps_etau : quantity (dimensionless)
     eps_mumu : quantity (dimensionless)
-    eps_mutau : quantity (dimensionless)
+    eps_mutau_magn : quantity (dimensionless)
+    eps_mutau_phase : quantity (angle)
     eps_tautau : quantity (dimensionless)
 
     None
@@ -79,7 +80,8 @@ class pi_prob3(PiStage):
                            'eps_emu',
                            'eps_etau',
                            'eps_mumu',
-                           'eps_mutau',
+                           'eps_mutau_magn',
+                           'eps_mutau_phase',
                            'eps_tautau',
                           )
 
@@ -223,9 +225,12 @@ class pi_prob3(PiStage):
         self.osc_params.eps_emu = self.params.eps_emu.value.m_as('dimensionless')
         self.osc_params.eps_etau = self.params.eps_etau.value.m_as('dimensionless')
         self.osc_params.eps_mumu = self.params.eps_mumu.value.m_as('dimensionless')
-        self.osc_params.eps_mutau = self.params.eps_mutau.value.m_as('dimensionless')
+        self.osc_params.eps_mutau = (
+            (self.params.eps_mutau_magn.value.m_as('dimensionless'),
+            self.params.eps_mutau_phase.value.m_as('rad'))
+        )
         self.osc_params.eps_tautau = self.params.eps_tautau.value.m_as('dimensionless')
-
+        print(self.osc_params.nsi_eps)
 
         for container in self.data:
             self.calc_probs(container['nubar'],

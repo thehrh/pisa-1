@@ -144,7 +144,8 @@ def get_dms(energy, H_mat, dm_vac_vac, dm_mat_mat, dm_mat_vac):
     - only god knows what happens in this function, somehow it seems to work
 
     '''
-
+    # the following is for solving the characteristic polynomial of H_mat:
+    # P(x) = x**3 + c2*x**2 + c1*x + c0
     real_product_a = (H_mat[0,1] * H_mat[1,2] * H_mat[2,0]).real
     real_product_b = (H_mat[0,0] * H_mat[1,1] * H_mat[2,2]).real
 
@@ -152,6 +153,10 @@ def get_dms(energy, H_mat, dm_vac_vac, dm_mat_mat, dm_mat_vac):
     norm_H_e_tau_sq = H_mat[0,2].real**2 + H_mat[0,2].imag**2
     norm_H_mu_tau_sq = H_mat[1,2].real**2 + H_mat[1,2].imag**2
 
+    # c1 = H_{11} * H_{22} + H_{11} * H_{33} + H_{22} * H_{33}
+    #      - |H_{12}|**2 - |H_{13}|**2 - |H_{23}|**2
+    # given Hermiticity of Hamiltonian (real diagonal elements),
+    # this coefficient must be real
     c1 = ((H_mat[0,0].real * (H_mat[1,1] + H_mat[2,2])).real
           - (H_mat[0,0].imag * (H_mat[1,1] + H_mat[2,2])).imag
           + (H_mat[1,1].real * H_mat[2,2]).real
@@ -161,6 +166,9 @@ def get_dms(energy, H_mat, dm_vac_vac, dm_mat_mat, dm_mat_vac):
           - norm_H_e_tau_sq
          )
 
+    # c0 = H_{11} * |H_{23}|**2 + H_{22} * |H_{13}|**2 + H_{33} * |H_{12}|**2
+    #      - H_{11} * H_{22} * H_{33} - 2*Re(H*_{13} * H_{12} * H_{23})
+    # hence, this coefficient is also real
     c0 = (H_mat[0,0].real * norm_H_mu_tau_sq
           + H_mat[1,1].real * norm_H_e_tau_sq
           + H_mat[2,2].real * norm_H_e_mu_sq
@@ -168,25 +176,35 @@ def get_dms(energy, H_mat, dm_vac_vac, dm_mat_mat, dm_mat_vac):
           - real_product_b
          )
 
+    # c2 = -H_{11} - H_{22} - H_{33}
+    # hence, this coefficient is also real
     c2 = - H_mat[0,0].real - H_mat[1,1].real - H_mat[2,2].real
 
     one_over_two_e = 0.5 / energy
     one_third = 1./3.
     two_third = 2./3.
 
+    # we also have to perform the corresponding algebra
+    # for the vacuum case, where the relevant elements of the
+    # hamiltonian are mass differences
     x = dm_vac_vac[1,0]
     y = dm_vac_vac[2,0]
 
     c2_v = - one_over_two_e * (x + y)
 
+    # p is real due to reality of c1 and c2
     p = c2**2 - 3.*c1
     p_v = one_over_two_e**2 * (x**2 + y**2 - x*y)
     p = max(0., p)
 
+    # q is real
     q = -13.5*c0 - c2**3 + 4.5*c1*c2
     q_v = one_over_two_e**3 * (x + y) * ((x + y)**2 - 4.5*x*y)
 
-    tmp = p**3 - q**2
+    # we need the quantity p**3 - q**2 to obtain the eigenvalues,
+    # but let's prevent inaccuracies and instead write
+    tmp = 27*(0.25 * c1**2 * (p - c1) + c0 * (q + 6.75 * c0))  # = p**3 - q**2
+    # TODO: can we simplify this quantity to reduce numerical inaccuracies?
     tmp_v = p_v**3 - q_v**2
 
     tmp = max(0., tmp)
@@ -198,6 +216,9 @@ def get_dms(energy, H_mat, dm_vac_vac, dm_mat_mat, dm_mat_vac):
     m_mat_v = cuda.local.array(shape=(3), dtype=ftype)
 
     a = two_third * math.pi
+    # intermediate result, needed to calculate the three
+    # mass eigenvalues (theta0, theta1, theta2 are the three
+    # corresponding arguments of the cosine, see m_mat_u)
     res = math.atan2(math.sqrt(tmp), q) * one_third
     theta[0] = res + a
     theta[1] = res - a

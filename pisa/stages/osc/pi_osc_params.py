@@ -191,12 +191,19 @@ class OscParams(object):
 
     @property
     def eps_mutau(self):
-        return self.nsi_eps[1, 2].real
+        return self.nsi_eps[1, 2] #self.nsi_eps[1, 2].real
 
-    @eps_etau.setter
+    @eps_mutau.setter
     def eps_mutau(self, value):
-        self.nsi_eps[2, 1] = value + 1.j * self.nsi_eps[2, 1].imag
-        self.nsi_eps[1, 2] = value + 1.j * self.nsi_eps[1, 2].imag
+        try:
+            magnitude, phase = value
+        except:
+            raise ValueError(
+                'Pass an iterable with two items (magnitude and phase)!'
+            )
+        print "setting eps_mutau magnitude and phase: %.3g, %.3g" % (magnitude, phase)
+        self.nsi_eps[1, 2] = magnitude * (np.cos(phase) + 1.j * np.sin(phase)) #value + 1.j * self.nsi_eps[1, 2].imag
+        self.nsi_eps[2, 1] = np.conjugate(self.nsi_eps[1, 2]) #value + 1.j * self.nsi_eps[2, 1].imag
 
     @property
     def eps_tautau(self):
