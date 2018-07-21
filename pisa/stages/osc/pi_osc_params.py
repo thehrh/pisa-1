@@ -164,22 +164,44 @@ class OscParams(object):
     @property
     def eps_emu(self):
         """nue-numu NSI coupling parameter"""
-        return self.nsi_eps[1, 0].real
+        return self.nsi_eps[0, 1]
 
     @eps_emu.setter
     def eps_emu(self, value):
-        self.nsi_eps[1, 0] = value + 1.j * self.nsi_eps[1, 0].imag
-        self.nsi_eps[0, 1] = value + 1.j * self.nsi_eps[0, 1].imag
+        try:
+            magnitude, phase = value
+        except:
+            raise ValueError(
+                'Pass an iterable with two items (magnitude and phase)!'
+            )
+        if magnitude < 0.0 and phase != 0.0:
+            raise ValueError(
+                'Only accepting negative values of eps_emu with a zero phase (real coupling)!'
+            )
+        #print "setting eps_emu magnitude and phase: %.3g, %.3g" % (magnitude, phase)
+        self.nsi_eps[0, 1] = magnitude * (np.cos(phase) + 1.j * np.sin(phase)) #value + 1.j * self.nsi_eps[0, 1].imag
+        self.nsi_eps[1, 0] = np.conjugate(self.nsi_eps[0, 1]) #value + 1.j * self.nsi_eps[1, 0].imag
 
     @property
     def eps_etau(self):
         """nue-nutau NSI coupling parameter"""
-        return self.nsi_eps[2, 0].real
+        return self.nsi_eps[0, 2]
 
     @eps_etau.setter
     def eps_etau(self, value):
-        self.nsi_eps[2, 0] = value + 1.j * self.nsi_eps[2, 0].imag
-        self.nsi_eps[0, 2] = value + 1.j * self.nsi_eps[0, 2].imag
+        try:
+            magnitude, phase = value
+        except:
+            raise ValueError(
+                'Pass an iterable with two items (magnitude and phase)!'
+            )
+        if magnitude < 0.0 and phase != 0.0:
+            raise ValueError(
+                'Only accepting negative values of eps_etau with a zero phase (real coupling)!'
+            )
+        #print "setting eps_etau magnitude and phase: %.3g, %.3g" % (magnitude, phase)
+        self.nsi_eps[0, 2] = magnitude * (np.cos(phase) + 1.j * np.sin(phase)) # value + 1.j * self.nsi_eps[0, 2].imag
+        self.nsi_eps[2, 0] = np.conjugate(self.nsi_eps[0, 2]) # value + 1.j * self.nsi_eps[2, 0].imag
 
     @property
     def eps_mumu(self):
@@ -191,7 +213,7 @@ class OscParams(object):
 
     @property
     def eps_mutau(self):
-        return self.nsi_eps[1, 2] #self.nsi_eps[1, 2].real
+        return self.nsi_eps[1, 2]
 
     @eps_mutau.setter
     def eps_mutau(self, value):
@@ -201,7 +223,11 @@ class OscParams(object):
             raise ValueError(
                 'Pass an iterable with two items (magnitude and phase)!'
             )
-        print "setting eps_mutau magnitude and phase: %.3g, %.3g" % (magnitude, phase)
+        if magnitude < 0.0 and phase != 0.0:
+            raise ValueError(
+                'Only accepting negative values of eps_mutau with a zero phase (real coupling)!'
+            )
+        #print "setting eps_mutau magnitude and phase: %.3g, %.3g" % (magnitude, phase)
         self.nsi_eps[1, 2] = magnitude * (np.cos(phase) + 1.j * np.sin(phase)) #value + 1.j * self.nsi_eps[1, 2].imag
         self.nsi_eps[2, 1] = np.conjugate(self.nsi_eps[1, 2]) #value + 1.j * self.nsi_eps[2, 1].imag
 

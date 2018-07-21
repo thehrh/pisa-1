@@ -88,7 +88,6 @@ def get_H_mat(rho, nsi_eps, nubar, H_mat):
     induced by charged-current weak interactions with electrons
 
     '''
-
     # 2*sqrt(2)*Gfermi in (eV^2-cm^3)/(mole-GeV)
     tworttwoGf = 1.52588e-4
     a = 0.5 * rho * tworttwoGf
@@ -100,11 +99,18 @@ def get_H_mat(rho, nsi_eps, nubar, H_mat):
     H_mat[0,0] = a
 
     # Obtain effective non-standard matter interaction Hamiltonian
-    nsi_rho_scale = 3. #// assume 3x electron density for "NSI"-quark (e.g., d) density
+    nsi_rho_scale = 1.
+    # before we had assumed 3x electron density for "NSI"-quark (e.g., d) density
+    # but now let's make each epsilon represent the "effective" nsi coupling
+    # e.g. roughly eps = eps_e + 3 * (eps_u + eps_d)
     fact = nsi_rho_scale * a
     for i in range(3):
         for j in range(3):
-            H_mat[i,j] += fact * nsi_eps[i,j]
+            # matter potential V -> -V* for anti-neutrinos
+            if nubar == -1:
+                H_mat[i,j] += fact * np.conj(nsi_eps[i,j])
+            elif nubar == 1:
+                H_mat[i, j] += fact * nsi_eps[i, j]
 
 def test_get_H_mat():
     rho = 1.
