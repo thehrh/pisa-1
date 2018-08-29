@@ -108,7 +108,7 @@ def get_H_mat(rho, nsi_eps, nubar, H_mat):
         for j in range(3):
             # matter potential V -> -V* for anti-neutrinos
             if nubar == -1:
-                H_mat[i,j] += fact * np.conj(nsi_eps[i,j])
+                H_mat[i,j] += fact * nsi_eps[i,j].conjugate()
             elif nubar == 1:
                 H_mat[i, j] += fact * nsi_eps[i, j]
 
