@@ -78,16 +78,12 @@ class pi_prob3(PiStage):
                            'deltam21',
                            'deltam31',
                            'deltacp',
-                           'eps_ee',
-                           'eps_emu_magn',
-                           'eps_emu_phase',
-                           'eps_etau_magn',
-                           'eps_etau_phase',
-                           'eps_mumu',
-                           'eps_mutau_magn',
-                           'eps_mutau_phase',
-                           'eps_tautau',
-                          )
+                           'eps_scale',
+                           'phi12',
+                           'phi13',
+                           'alpha1',
+                           'alpha2'
+        )
 
         input_names = ()
         output_names = ()
@@ -183,8 +179,8 @@ class pi_prob3(PiStage):
     def calc_probs(self, nubar, e_array, rho_array, len_array, out):
         ''' wrapper to execute osc. calc '''
         propagate_array(self.osc_params.dm_matrix, # pylint: disable = unexpected-keyword-arg, no-value-for-parameter
-                        self.osc_params.mix_matrix_complex,
-                        self.osc_params.nsi_eps,
+                        self.osc_params.mix_matrix_reparam_complex,
+                        self.osc_params.gen_mat_pot_matrix_complex,
                         nubar,
                         e_array.get(WHERE),
                         rho_array.get(WHERE),
@@ -225,22 +221,11 @@ class pi_prob3(PiStage):
         self.osc_params.dm21 = self.params.deltam21.value.m_as('eV**2')
         self.osc_params.dm31 = self.params.deltam31.value.m_as('eV**2')
         self.osc_params.deltacp = self.params.deltacp.value.m_as('rad')
-        self.osc_params.eps_ee = self.params.eps_ee.value.m_as('dimensionless')
-        self.osc_params.eps_emu = (
-            (self.params.eps_emu_magn.value.m_as('dimensionless'),
-            self.params.eps_emu_phase.value.m_as('rad'))
-        )
-        self.osc_params.eps_etau = (
-            (self.params.eps_etau_magn.value.m_as('dimensionless'),
-            self.params.eps_etau_phase.value.m_as('rad'))
-        )
-        self.osc_params.eps_mumu = self.params.eps_mumu.value.m_as('dimensionless')
-        self.osc_params.eps_mutau = (
-            (self.params.eps_mutau_magn.value.m_as('dimensionless'),
-            self.params.eps_mutau_phase.value.m_as('rad'))
-        )
-        self.osc_params.eps_tautau = self.params.eps_tautau.value.m_as('dimensionless')
-        #print(self.osc_params.nsi_eps)
+        self.osc_params.eps_scale = self.params.eps_scale.value.m_as('dimensionless')
+        self.osc_params.phi12 = self.params.phi12.value.m_as('rad')
+        self.osc_params.phi13 = self.params.phi13.value.m_as('rad')
+        self.osc_params.alpha1 = self.params.alpha1.value.m_as('rad')
+        self.osc_params.alpha2 = self.params.alpha2.value.m_as('rad')
 
         for container in self.data:
             self.calc_probs(container['nubar'],

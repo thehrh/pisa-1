@@ -16,7 +16,9 @@ class OscParams(object):
     Holds neutrino oscillation parameters, i.e., mixing angles, squared-mass
     differences, and a Dirac-type CPV phase. The neutrino mixing (PMNS) matrix
     constructed from these parameters is given in the standard
-    3x3 parameterization.
+    3x3 parameterization. Also holds the generalised matter potential matrix
+    (divided by the matter potential a), i.e. diag(1, 0, 0) for the standard
+    case.
 
     Parameters
     ----------
@@ -44,9 +46,22 @@ class OscParams(object):
     deltacp : float
         Cf. parameters
 
+    gen_mat_pot_matrix : 3d float array of shape (3, 3, 2)
+
+    gen_mat_pot_matrix : 3d complex array
+
     mix_matrix : 3d float array of shape (3, 3, 2)
         Neutrino mixing (PMNS) matrix in standard parameterization. The third
         dimension holds the real and imaginary parts of each matrix element.
+
+    mix_matrix_complex : 3d complex array
+
+    mix_matrix_reparam : 3d float array of shape (3, 3, 2)
+        Reparameterized neutrino mixing matrix, such that CPT invariance
+        of vacuum propagation implemented by 3 simultaneous osc. param.
+        transformations.
+
+    mix_matrix_reparam_complex : 3d complex array
 
     dm_matrix : 2d float array of shape (3, 3)
         Antisymmetric matrix of squared-mass differences in vacuum
@@ -62,7 +77,11 @@ class OscParams(object):
         self.dm21 = 0.
         self.dm31 = 0.
         self.dm41 = 0.
-        self.nsi_eps = np.zeros((3, 3), dtype=FTYPE) + 1.j * np.zeros((3,3), dtype=FTYPE)
+        self._eps_scale = 1.
+        self._sin_phi12 = 0.
+        self._sin_phi13 = 0.
+        self._sin_alpha1 = 0.
+        self._sin_alpha2 = 0.
 
     # --- theta12 ---
     @property
@@ -152,96 +171,181 @@ class OscParams(object):
         self._deltacp = value
 
     # --- NSI epsilons ---
+    # --- overall matter potential strength ---
+    @property
+    def eps_scale(self):
+        """Generalised matter potential strength scale"""
+        return self._eps_scale
+
+    @eps_scale.setter
+    def eps_scale(self, value):
+        self._eps_scale = value
+
+    # --- projection phases ---
+    # --- phi12 ---
+    @property
+    def sin_phi12(self):
+        """1-2 phase"""
+        return self._sin_phi12
+
+    @sin_phi12.setter
+    def sin_phi12(self, value):
+        assert (abs(value) <= 1)
+        self._sin_phi12 = value
+
+    @property
+    def phi12(self):
+        return np.arcsin(self.sin_phi12)
+
+    @phi12.setter
+    def phi12(self, value):
+        self.sin_phi12 = np.sin(value)
+
+    # --- phi13 ---
+    @property
+    def sin_phi13(self):
+        """1-3 phase"""
+        return self._sin_phi13
+
+    @sin_phi13.setter
+    def sin_phi13(self, value):
+        assert (abs(value) <= 1)
+        self._sin_phi13 = value
+
+    @property
+    def phi13(self):
+        return np.arcsin(self.sin_phi13)
+
+    @phi13.setter
+    def phi13(self, value):
+        self.sin_phi13 = np.sin(value)
+
+    # --- vacuum-matter relative phases ---
+    # --- alpha1 ---
+    @property
+    def sin_alpha1(self):
+        """1-phase"""
+        return self._sin_alpha1
+
+    @sin_alpha1.setter
+    def sin_alpha1(self, value):
+        assert (abs(value) <= 1)
+        self._sin_alpha1 = value
+
+    @property
+    def alpha1(self):
+        return np.arcsin(self.sin_alpha1)
+
+    @alpha1.setter
+    def alpha1(self, value):
+        self.sin_alpha1 = np.sin(value)
+
+    # --- alpha2 ---
+    @property
+    def sin_alpha2(self):
+        """2-phase"""
+        return self._sin_alpha2
+
+    @sin_alpha2.setter
+    def sin_alpha2(self, value):
+        assert (abs(value) <= 1)
+        self._sin_alpha2 = value
+
+    @property
+    def alpha2(self):
+        return np.arcsin(self.sin_alpha2)
+
+    @alpha2.setter
+    def alpha2(self, value):
+        self.sin_alpha2 = np.sin(value)
+
+    # --- nsi coupling matrix elements ---
     @property
     def eps_ee(self):
         """nue-nue NSI coupling parameter"""
-        return self.nsi_eps[0, 0].real
-
-    @eps_ee.setter
-    def eps_ee(self, value):
-        self.nsi_eps[0, 0] = value + 1.j * self.nsi_eps[0, 0].imag
+        return self.gen_mat_pot_matrix_complex[0, 0].real  - 1
 
     @property
     def eps_emu(self):
         """nue-numu NSI coupling parameter"""
-        return self.nsi_eps[0, 1]
-
-    @eps_emu.setter
-    def eps_emu(self, value):
-        try:
-            magnitude, phase = value
-        except:
-            raise ValueError(
-                'Pass an iterable with two items (magnitude and phase)!'
-            )
-        if magnitude < 0.0 and phase != 0.0:
-            raise ValueError(
-                'Only accepting negative values of eps_emu with a zero phase (real coupling)!'
-            )
-        #print "setting eps_emu magnitude and phase: %.3g, %.3g" % (magnitude, phase)
-        self.nsi_eps[0, 1] = magnitude * (np.cos(phase) + 1.j * np.sin(phase)) #value + 1.j * self.nsi_eps[0, 1].imag
-        self.nsi_eps[1, 0] = np.conjugate(self.nsi_eps[0, 1]) #value + 1.j * self.nsi_eps[1, 0].imag
+        return self.gen_mat_pot_matrix_complex[0, 1]
 
     @property
     def eps_etau(self):
         """nue-nutau NSI coupling parameter"""
-        return self.nsi_eps[0, 2]
-
-    @eps_etau.setter
-    def eps_etau(self, value):
-        try:
-            magnitude, phase = value
-        except:
-            raise ValueError(
-                'Pass an iterable with two items (magnitude and phase)!'
-            )
-        if magnitude < 0.0 and phase != 0.0:
-            raise ValueError(
-                'Only accepting negative values of eps_etau with a zero phase (real coupling)!'
-            )
-        #print "setting eps_etau magnitude and phase: %.3g, %.3g" % (magnitude, phase)
-        self.nsi_eps[0, 2] = magnitude * (np.cos(phase) + 1.j * np.sin(phase)) # value + 1.j * self.nsi_eps[0, 2].imag
-        self.nsi_eps[2, 0] = np.conjugate(self.nsi_eps[0, 2]) # value + 1.j * self.nsi_eps[2, 0].imag
+        return self.gen_mat_pot_matrix_complex[0, 2]
 
     @property
     def eps_mumu(self):
-        return self.nsi_eps[1,1].real
-
-    @eps_mumu.setter
-    def eps_mumu(self, value):
-        self.nsi_eps[1,1] = value + 1.j * self.nsi_eps[1, 1].imag
+        """numu-numu NSI coupling parameter"""
+        return self.gen_mat_pot_matrix_complex[1, 1].real
 
     @property
     def eps_mutau(self):
-        return self.nsi_eps[1, 2]
-
-    @eps_mutau.setter
-    def eps_mutau(self, value):
-        try:
-            magnitude, phase = value
-        except:
-            raise ValueError(
-                'Pass an iterable with two items (magnitude and phase)!'
-            )
-        if magnitude < 0.0 and phase != 0.0:
-            raise ValueError(
-                'Only accepting negative values of eps_mutau with a zero phase (real coupling)!'
-            )
-        #print "setting eps_mutau magnitude and phase: %.3g, %.3g" % (magnitude, phase)
-        self.nsi_eps[1, 2] = magnitude * (np.cos(phase) + 1.j * np.sin(phase)) #value + 1.j * self.nsi_eps[1, 2].imag
-        self.nsi_eps[2, 1] = np.conjugate(self.nsi_eps[1, 2]) #value + 1.j * self.nsi_eps[2, 1].imag
+        """numu-nutau NSI coupling parameter"""
+        return self.gen_mat_pot_matrix_complex[1, 2]
 
     @property
     def eps_tautau(self):
-        return self.nsi_eps[2,2].real
+        """nutau-nutau NSI coupling parameter"""
+        return self.gen_mat_pot_matrix_complex[2, 2].real
 
-    @eps_tautau.setter
-    def eps_tautau(self, value):
-        self.nsi_eps[2,2] = value + 1.j * self.nsi_eps[2, 2].imag
+    @property
+    def gen_mat_pot_matrix(self):
+        """Matter Hamiltonian without the matter parameter a=sqrt(2)G_F N_e"""
+        pot = np.zeros((3, 3, 2), dtype=FTYPE)
+
+        sp12 = self.sin_phi12
+        sp13 = self.sin_phi13
+        cp12 = np.sqrt(1. - sp12**2)
+        cp13 = np.sqrt(1. - sp13**2)
+
+        sa1 = self.sin_alpha1
+        sa2 = self.sin_alpha2
+        ca1 = np.sqrt(1. - sa1**2)
+        ca2 = np.sqrt(1. - sa2**2)
+
+        # 1 + eps_ee - eps_mumu (real)
+        pot[0, 0, 0] = self.eps_scale * cp13**2 * (cp12**2 - sp12**2)
+        pot[0, 0, 1] = 0.
+        # eps_emu (complex)
+        pot[0, 1, 0] = -self.eps_scale * cp13**2 * sp12 * cp12 * np.cos(self.alpha1 - self.alpha2)
+        pot[0, 1, 1] = -self.eps_scale * cp13**2 * sp12 * cp12 * np.sin(self.alpha1 - self.alpha2)
+        # eps_etau (complex)
+        pot[0, 2, 0] = self.eps_scale * cp13 * sp13 * cp12 * np.cos(2 * self.alpha1 + self.alpha2)
+        pot[0, 2, 1] = self.eps_scale * cp13 * sp13 * cp12 * np.sin(2 * self.alpha1 + self.alpha2)
+        # eps_emu* (complex)
+        pot[1, 0, 0] = pot[0, 1, 0]
+        pot[1, 0, 1] = -pot[0, 1, 1]
+        # eps_etau* (complex)
+        pot[2, 0, 0] = pot[0, 2, 0]
+        pot[2, 0, 1] = -pot[0, 2, 1]
+        # eps_mumu - eps_mumu (real, 0 by definition)
+        pot[1, 1, 0] = 0.
+        pot[1, 1, 1] = 0.
+        # eps_mutau (complex)
+        pot[1, 2, 0] = self.eps_scale * sp13 * cp13 * sp12 * np.cos(self.alpha1 + 2 * self.alpha2)
+        pot[1, 2, 1] = self.eps_scale * sp13 * cp13 * sp12 * np.sin(self.alpha1 + 2 * self.alpha2)
+        # eps_mutau* (complex)
+        pot[2, 1, 0] = pot[1, 2, 0]
+        pot[2, 1, 1] = -pot[2, 1, 1]
+        # eps_tautau - eps_mumu (real)
+        pot[2, 2, 0] = self.eps_scale * (sp13**2 - cp13**2 * sp12**2)
+        pot[2, 2, 0] = 0.
+
+        return pot
+
+    @property
+    def gen_mat_pot_matrix_complex(self):
+        """General matter potential matrix as complex 2-d array"""
+        pot = self.gen_mat_pot_matrix
+
+        return pot[:, :, 0] + pot[:, :, 1] * 1.j
+
 
     @property
     def mix_matrix(self):
-        """Neutrino mixing matrix"""
+        """Neutrino mixing matrix in its 'standard' form"""
         mix = np.zeros((3, 3, 2), dtype=FTYPE)
 
         sd = np.sin(self.deltacp)
@@ -274,8 +378,60 @@ class OscParams(object):
 
     @property
     def mix_matrix_complex(self):
-        ''' mixing matrix as complex 2-d array'''
+        """Mixing matrix as complex 2-d array"""
         return self.mix_matrix[:, :, 0] + self.mix_matrix[:, :, 1] * 1.j
+
+    @property
+    def mix_matrix_reparam(self):
+        """
+        Neutrino mixing matrix reparameterised in a way
+        such that the CPT trafo Hvac -> -Hvac*  is exactly implemented by
+        the simultaneous transformations
+            * deltamsq31 -> -deltamsq32
+            * theta12 -> pi/2 - theta12
+            * deltacp -> pi - deltacp
+
+        which hence leave vacuum propagation invariant.
+
+        This representation follows from the standard form U
+        as diag(exp(i*deltacp), 0, 0) * U * diag(exp(-i*deltacp), 0, 0).
+
+        """
+        mix = np.zeros((3, 3, 2), dtype=FTYPE)
+
+        sd = np.sin(self.deltacp)
+        cd = np.cos(self.deltacp)
+
+        c12 = np.sqrt(1. - self.sin12**2)
+        c23 = np.sqrt(1. - self.sin23**2)
+        c13 = np.sqrt(1. - self.sin13**2)
+
+        mix[0, 0, 0] = c12 * c13
+        mix[0, 0, 1] = 0.
+        mix[0, 1, 0] = self.sin12 * c13 * cd
+        mix[0, 1, 1] = self.sin12 * c13 * sd
+        mix[0, 2, 0] = self.sin13
+        mix[0, 2, 1] = 0.
+        mix[1, 0, 0] = - self.sin12 * c23 * cd - c12 * self.sin23 * self.sin13
+        mix[1, 0, 1] = self.sin12 * c23 * sd
+        mix[1, 1, 0] = c12 * c23 - self.sin12 * self.sin23 * self.sin13 * cd
+        mix[1, 1, 1] = - self.sin12 * self.sin23 * self.sin13 * sd
+        mix[1, 2, 0] = self.sin23 * c13
+        mix[1, 2, 1] = 0.
+        mix[2, 0, 0] = self.sin12 * self.sin23 * cd - c12 * c23 * self.sin13
+        mix[2, 0, 1] = - self.sin12 * self.sin23 * sd
+        mix[2, 1, 0] = - c12 * self.sin23 - self.sin12 * c23 * self.sin13 * cd
+        mix[2, 1, 1] = - self.sin12 * c23 * self.sin13 * sd
+        mix[2, 2, 0] = c23 * c13
+        mix[2, 2, 1] = 0.
+
+        return mix
+
+    @property
+    def mix_matrix_reparam_complex(self):
+        """Reparameterised mixing matrix as complex 2-d array"""
+        return (self.mix_matrix_reparam[:, :, 0]
+                + self.mix_matrix_reparam[:, :, 1] * 1.j)
 
     @property
     def dm_matrix(self):
