@@ -11,6 +11,10 @@ import numpy as np
 
 from pisa import FTYPE
 
+
+__all__ = ['OscParams']
+
+
 class OscParams(object):
     """
     Holds neutrino oscillation parameters, i.e., mixing angles, squared-mass
@@ -331,7 +335,7 @@ class OscParams(object):
         pot[2, 1, 1] = -pot[2, 1, 1]
         # eps_tautau - eps_mumu (real)
         pot[2, 2, 0] = self.eps_scale * (sp13**2 - cp13**2 * sp12**2)
-        pot[2, 2, 0] = 0.
+        pot[2, 2, 1] = 0.
 
         return pot
 
@@ -339,8 +343,13 @@ class OscParams(object):
     def gen_mat_pot_matrix_complex(self):
         """General matter potential matrix as complex 2-d array"""
         pot = self.gen_mat_pot_matrix
+        pot_complex = pot[:, :, 0] + pot[:, :, 1] * 1.j
 
-        return pot[:, :, 0] + pot[:, :, 1] * 1.j
+        # make sure this is a valid Hermitian potential matrix
+        # before returning anything
+        assert np.array_equal(pot_complex, pot_complex.conj().T)
+
+        return pot_complex
 
 
     @property
