@@ -316,8 +316,8 @@ class OscParams(object):
         pot[0, 1, 0] = -self.eps_scale * cp13**2 * sp12 * cp12 * np.cos(self.alpha1 - self.alpha2)
         pot[0, 1, 1] = -self.eps_scale * cp13**2 * sp12 * cp12 * np.sin(self.alpha1 - self.alpha2)
         # eps_etau (complex)
-        pot[0, 2, 0] = self.eps_scale * cp13 * sp13 * cp12 * np.cos(2 * self.alpha1 + self.alpha2)
-        pot[0, 2, 1] = self.eps_scale * cp13 * sp13 * cp12 * np.sin(2 * self.alpha1 + self.alpha2)
+        pot[0, 2, 0] = -self.eps_scale * cp13 * sp13 * cp12 * np.cos(2 * self.alpha1 + self.alpha2)
+        pot[0, 2, 1] = -self.eps_scale * cp13 * sp13 * cp12 * np.sin(2 * self.alpha1 + self.alpha2)
         # eps_emu* (complex)
         pot[1, 0, 0] = pot[0, 1, 0]
         pot[1, 0, 1] = -pot[0, 1, 1]
@@ -332,7 +332,7 @@ class OscParams(object):
         pot[1, 2, 1] = self.eps_scale * sp13 * cp13 * sp12 * np.sin(self.alpha1 + 2 * self.alpha2)
         # eps_mutau* (complex)
         pot[2, 1, 0] = pot[1, 2, 0]
-        pot[2, 1, 1] = -pot[2, 1, 1]
+        pot[2, 1, 1] = -pot[1, 2, 1]
         # eps_tautau - eps_mumu (real)
         pot[2, 2, 0] = self.eps_scale * (sp13**2 - cp13**2 * sp12**2)
         pot[2, 2, 1] = 0.
