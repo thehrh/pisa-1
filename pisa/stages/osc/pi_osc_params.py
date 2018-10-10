@@ -82,10 +82,13 @@ class OscParams(object):
         self.dm31 = 0.
         self.dm41 = 0.
         self._eps_scale = 1.
+        self._eps_prime = 0.
         self._sin_phi12 = 0.
         self._sin_phi13 = 0.
-        self._sin_alpha1 = 0.
-        self._sin_alpha2 = 0.
+        self._sin_phi23 = 0.
+        self._alpha1 = 0.
+        self._alpha2 = 0.
+        self._deltansi = 0.
 
     # --- theta12 ---
     @property
@@ -185,6 +188,15 @@ class OscParams(object):
     def eps_scale(self, value):
         self._eps_scale = value
 
+    @property
+    def eps_prime(self):
+        """Second Hmat eigenvalue (beside eps_scale)"""
+        return self._eps_prime
+
+    @eps_prime.setter
+    def eps_prime(self, value):
+        self._eps_prime = value
+
     # --- projection phases ---
     # --- phi12 ---
     @property
@@ -224,44 +236,58 @@ class OscParams(object):
     def phi13(self, value):
         self.sin_phi13 = np.sin(value)
 
+    # --- phi23 ---
+    @property
+    def sin_phi23(self):
+        """2-3 phase"""
+        return self._sin_phi23
+
+    @sin_phi23.setter
+    def sin_phi23(self, value):
+        assert (abs(value) <= 1)
+        self._sin_phi23 = value
+
+    @property
+    def phi23(self):
+        return np.arcsin(self.sin_phi23)
+
+    @phi23.setter
+    def phi23(self, value):
+        self.sin_phi23 = np.sin(value)
+
     # --- vacuum-matter relative phases ---
     # --- alpha1 ---
     @property
-    def sin_alpha1(self):
-        """1-phase"""
-        return self._sin_alpha1
-
-    @sin_alpha1.setter
-    def sin_alpha1(self, value):
-        assert (abs(value) <= 1)
-        self._sin_alpha1 = value
-
-    @property
     def alpha1(self):
-        return np.arcsin(self.sin_alpha1)
+        """1-phase"""
+        return self._alpha1
 
     @alpha1.setter
     def alpha1(self, value):
-        self.sin_alpha1 = np.sin(value)
+        assert value >= 0. and value <= 2*np.pi
+        self._alpha1 = value
 
     # --- alpha2 ---
     @property
-    def sin_alpha2(self):
-        """2-phase"""
-        return self._sin_alpha2
-
-    @sin_alpha2.setter
-    def sin_alpha2(self, value):
-        assert (abs(value) <= 1)
-        self._sin_alpha2 = value
-
-    @property
     def alpha2(self):
-        return np.arcsin(self.sin_alpha2)
+        """2-phase"""
+        return self._alpha2
 
     @alpha2.setter
     def alpha2(self, value):
-        self.sin_alpha2 = np.sin(value)
+        assert value >= 0. and value <= 2*np.pi
+        self._alpha2 = value
+
+    # --- nsi phase ---
+    @property
+    def deltansi(self):
+        """NSI phase"""
+        return self._deltansi
+
+    @deltansi.setter
+    def deltansi(self, value):
+        assert value >= 0. and value <= 2*np.pi
+        self._deltansi = value
 
     # --- nsi coupling matrix elements ---
     @property
@@ -301,40 +327,115 @@ class OscParams(object):
 
         sp12 = self.sin_phi12
         sp13 = self.sin_phi13
+        sp23 = self.sin_phi23
         cp12 = np.sqrt(1. - sp12**2)
         cp13 = np.sqrt(1. - sp13**2)
+        cp23 = np.sqrt(1. - sp23**2)
 
-        sa1 = self.sin_alpha1
-        sa2 = self.sin_alpha2
-        ca1 = np.sqrt(1. - sa1**2)
-        ca2 = np.sqrt(1. - sa2**2)
+        sdnsi = np.sin(self.deltansi)
+        cdnsi = np.cos(self.deltansi)
 
         # 1 + eps_ee - eps_mumu (real)
-        pot[0, 0, 0] = self.eps_scale * cp13**2 * (cp12**2 - sp12**2)
+        pot[0, 0, 0] = (
+            self.eps_scale * cp13**2 * (cp12**2 - sp12**2) +
+            self.eps_prime * (
+                (cp12**2 - sp12**2) * (sp13**2 * sp23**2 - cp23**2) -
+                4 * cp12 * sp12 * sp13 * cp23 * sp23 * cdnsi
+            )
+        )
         pot[0, 0, 1] = 0.
         # eps_emu (complex)
-        pot[0, 1, 0] = -self.eps_scale * cp13**2 * sp12 * cp12 * np.cos(self.alpha1 - self.alpha2)
-        pot[0, 1, 1] = -self.eps_scale * cp13**2 * sp12 * cp12 * np.sin(self.alpha1 - self.alpha2)
+        pot[0, 1, 0] = (
+            self.eps_scale * cp12 * sp12 * cp13**2 * np.cos(self.alpha1 - self.alpha2) +
+            self.eps_prime * (
+                (
+                    cp12 * sp12 * (sp13**2 * sp23**2 - cp23**2) +
+                    sp13 * cp23 * sp23 * cdnsi * (cp12**2 - sp12**2)
+                ) * np.cos(self.alpha1 - self.alpha2) -
+                (
+                    sp13 * cp23 * sp23 * sdnsi
+                ) * np.sin(self.alpha1 - self.alpha2)
+            )
+        )
+        pot[0, 1, 1] = (
+            self.eps_scale * cp12 * sp12 * cp13**2 * np.sin(self.alpha1 - self.alpha2) +
+            self.eps_prime * (
+                (
+                    cp12 * sp12 * (sp13**2 * sp23**2 - cp23**2) +
+                    sp13 * cp23* sp23 * cdnsi * (cp12**2 - sp12**2)
+                ) * np.sin(self.alpha1 - self.alpha2) +
+                (
+                    sp13 * cp23 * sp23 * sdnsi
+                ) * np.cos(self.alpha1 - self.alpha2)
+            )
+        )
         # eps_etau (complex)
-        pot[0, 2, 0] = -self.eps_scale * cp13 * sp13 * cp12 * np.cos(2 * self.alpha1 + self.alpha2)
-        pot[0, 2, 1] = -self.eps_scale * cp13 * sp13 * cp12 * np.sin(2 * self.alpha1 + self.alpha2)
+        pot[0, 2, 0] = (
+            -self.eps_scale * cp12 * sp13 * cp13 * np.cos(2 * self.alpha1 + self.alpha2) +
+            self.eps_prime * (
+                (
+                    cp13 * sp23 * (cp12 * sp13 * sp23 - sp12 * cp23 * cdnsi)
+                ) * np.cos(2 * self.alpha1  + self.alpha2) -
+                (
+                    cp13 * sp12 * cp23 * sp23 * sdnsi
+                ) * np.sin(2 * self.alpha1 + self.alpha2)
+            )
+        )
+        pot[0, 2, 1] = (
+            -self.eps_scale * cp12* sp13 * cp13 * np.sin(2 * self.alpha1 + self.alpha2) +
+            self.eps_prime * (
+                (
+                    cp13 * sp23 * (cp12 * sp13 * sp23 - sp12 * cp23 * cdnsi)
+                ) * np.sin(2 * self.alpha1 + self.alpha2) +
+                (
+                    cp13 * sp23 * sp12 * cp23 * sdnsi
+                ) * np.cos(2 * self.alpha1 + self.alpha2)
+            )
+        )
         # eps_emu* (complex)
         pot[1, 0, 0] = pot[0, 1, 0]
         pot[1, 0, 1] = -pot[0, 1, 1]
         # eps_etau* (complex)
         pot[2, 0, 0] = pot[0, 2, 0]
         pot[2, 0, 1] = -pot[0, 2, 1]
-        # eps_mumu - eps_mumu (real, 0 by definition)
+        # eps_mumu - eps_mumu (0 by definition)
         pot[1, 1, 0] = 0.
         pot[1, 1, 1] = 0.
         # eps_mutau (complex)
-        pot[1, 2, 0] = self.eps_scale * sp13 * cp13 * sp12 * np.cos(self.alpha1 + 2 * self.alpha2)
-        pot[1, 2, 1] = self.eps_scale * sp13 * cp13 * sp12 * np.sin(self.alpha1 + 2 * self.alpha2)
+        pot[1, 2, 0] = (
+            -self.eps_scale * sp12 * cp13 * sp13 * np.cos(self.alpha1 + 2 * self.alpha2) +
+            self.eps_prime * (
+                (
+                    cp13 * sp23 * (sp12 * sp13 * sp23 + cp12 * cp23 * cdnsi)
+                ) * np.cos(self.alpha1 + 2 * self.alpha2) +
+                (
+                    cp12 * cp13 * cp23 * sp23 * sdnsi
+                ) * np.sin(self.alpha1 + 2 * self.alpha2)
+            )
+        )
+        pot[1, 2, 1] = (
+            -self.eps_scale * sp12 * cp13 * sp13 * np.sin(self.alpha1 + 2 * self.alpha2) +
+            self.eps_prime * (
+                (
+                    -cp12 * cp13 * cp23 * sp23 * sdnsi
+                ) * np.cos(self.alpha1 + 2 * self.alpha2) +
+                (
+                    cp13 * sp23 * (sp12 * sp13 * sp23 + cp12 * cp23 * cdnsi)
+                ) * np.sin(self.alpha1 + 2 * self.alpha2)
+            )
+        )
         # eps_mutau* (complex)
         pot[2, 1, 0] = pot[1, 2, 0]
         pot[2, 1, 1] = -pot[1, 2, 1]
         # eps_tautau - eps_mumu (real)
-        pot[2, 2, 0] = self.eps_scale * (sp13**2 - cp13**2 * sp12**2)
+        pot[2, 2, 0] = (
+            self.eps_scale * (sp13**2 - cp13**2 * sp12**2) +
+            self.eps_prime *(
+                sp23**2 * (cp13**2 - sp12**2 * sp13**2) -
+                2 * cp12 * sp12 * sp13 * cp23 * sp23 * cdnsi -
+                cp12**2 * cp23**2
+            )
+        )
         pot[2, 2, 1] = 0.
 
         return pot
@@ -470,3 +571,125 @@ class OscParams(object):
         dmVacVac[2, 1] = - dmVacVac[1, 2]
 
         return dmVacVac
+
+def test_nsi_parameterization():
+    alpha1, alpha2, deltansi = np.random.rand(3) * 2. * np.pi
+    phi12, phi13, phi23 = np.random.rand(3) * np.pi/2.
+    eps_scale, eps_prime = np.random.rand(2) * 10.
+    osc_params = OscParams()
+    osc_params.eps_scale = eps_scale
+    osc_params.eps_prime = eps_prime
+    osc_params.phi12 = phi12
+    osc_params.phi13 = phi13
+    osc_params.phi23 = phi23
+    osc_params.alpha1 = alpha1
+    osc_params.alpha2 = alpha2
+    osc_params.deltansi = deltansi
+    # relative matter-nsi phases
+    Qrel = (
+        np.array([
+            complex(np.cos(alpha1), np.sin(alpha1)),
+            complex(np.cos(alpha2), np.sin(alpha2)),
+            complex(np.cos(-(alpha1 + alpha2)), np.sin(-(alpha1 + alpha2)))
+        ]) * np.eye(3, dtype=FTYPE)
+    )
+    # rotation matrices in right-handed convention
+    R12 = np.array(
+        [[np.cos(phi12), -np.sin(phi12), 0],
+        [np.sin(phi12), np.cos(phi12), 0],
+        [0, 0, 1]],
+        dtype=FTYPE
+    )
+    R13 = np.array(
+        [[np.cos(phi13), 0, np.sin(phi13)],
+        [0, 1, 0],
+        [-np.sin(phi13), 0, np.cos(phi13)]],
+        dtype=FTYPE
+    )
+    R23_complex = np.array(
+        [[1, 0, 0],
+        [0, np.cos(phi23), -np.sin(phi23) * complex(np.cos(deltansi), np.sin(-deltansi))],
+        [0, np.sin(phi23) * complex(np.cos(deltansi), np.sin(deltansi)), np.cos(phi23)]],
+    )
+    # "matter mixing matrix"
+    Umat = np.matmul(R12, np.matmul(R13, R23_complex))
+    # Hmat eigenvalues
+    Dmat = np.array([eps_scale, eps_prime, 0], dtype=FTYPE) * np.eye(3, dtype=FTYPE)
+    # matter Hamiltonian from matrix multiplication vs. analytically
+    # start from the innermost product, work your way outwards
+    Hmat_ref = np.matmul(
+        Qrel,
+        np.matmul(Umat,
+            np.matmul(Dmat,
+                np.matmul(Umat.conj().T, Qrel.conj().T)
+            )
+        )
+    )
+    # subtract mumu entry from diagonal entries (trace irrelevant)
+    Hmat_ref = Hmat_ref - Hmat_ref[1, 1] * np.eye(3, dtype=FTYPE)
+    # already subtracted for class attribute
+    Hmat = osc_params.gen_mat_pot_matrix_complex
+    logging.info("Matter Hamiltonian from matrix multiplication:\n%s" % Hmat_ref)
+    logging.info("Analytical expansion:\n%s" % Hmat)
+    if not np.all(np.isclose(Hmat, Hmat_ref)):
+        raise ValueError(
+            'Evaluating analytical expressions for matter Hamiltonian elements'
+            ' does not give agreement with numerical calculation!'
+        )
+
+def test_sympy_mat_mult():
+    """
+    Sympy calculation of generalised matter Hamiltonian.
+    Mainly for reference.
+
+    """
+    from sympy import (cos, sin, Matrix, eye, I, Symbol, symbols)
+    from sympy.physics.quantum.dagger import Dagger
+    phi12, phi13, phi23 = symbols('phi12 phi13 phi23', real=True)
+    alpha1, alpha2 = symbols('alpha1 alpha2', real=True)
+    eps_scale, eps_prime = symbols('eps_scale eps_prime', real=True)
+    deltansi = Symbol('deltansi', real=True)
+
+    Dmat = Matrix(
+        [[eps_scale, 0, 0], [0, eps_prime, 0], [0, 0, 0]]
+    )
+    Qrel = Matrix(
+        [[cos(alpha1) + I * sin(alpha1), 0, 0],
+        [0, cos(alpha2) + I * sin(alpha2), 0],
+        [0, 0, cos(-(alpha1 + alpha2)) + I * sin(-(alpha1 + alpha2))]]
+    )
+    R12 = Matrix(
+        [[cos(phi12), -sin(phi12), 0],
+        [sin(phi12), cos(phi12), 0],
+        [0, 0, 1]]
+    )
+    R13 = Matrix(
+        [[cos(phi13), 0, sin(phi13)],
+        [0, 1, 0],
+        [-sin(phi13), 0, cos(phi13)]]
+    )
+    R23_complex = Matrix(
+        [[1, 0, 0],
+        [0, cos(phi23), -sin(phi23) * (cos(deltansi) + I * sin(-deltansi))],
+        [0, sin(phi23) * (cos(deltansi) + I * sin(deltansi)), cos(phi23)]]
+    )
+
+    Umat = R12 * R13 * R23_complex
+    tmp = Dagger(Umat) * Dagger(Qrel)
+    tmp2 = Dmat * tmp
+    tmp3 = Umat * tmp2
+    Hmat_sympy = Qrel * tmp3
+    Hmat_sympy_minus_mumu = Hmat_sympy - Hmat_sympy[1, 1] * eye(3)
+    return Hmat_sympy_minus_mumu
+
+
+if __name__=='__main__':
+    from pisa import TARGET
+    from pisa.utils.log import set_verbosity, logging
+    assert TARGET == 'cpu', "Cannot test functions on GPU, set PISA_TARGET to 'cpu'"
+    set_verbosity(1)
+    test_nsi_parameterization()
+    try:
+        test_sympy_mat_mult()
+    except:
+        pass
