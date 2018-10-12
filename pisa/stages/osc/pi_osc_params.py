@@ -52,7 +52,7 @@ class OscParams(object):
 
     gen_mat_pot_matrix : 3d float array of shape (3, 3, 2)
 
-    gen_mat_pot_matrix : 3d complex array
+    gen_mat_pot_matrix_complex : 3d complex array
 
     mix_matrix : 3d float array of shape (3, 3, 2)
         Neutrino mixing (PMNS) matrix in standard parameterization. The third
@@ -83,9 +83,9 @@ class OscParams(object):
         self.dm41 = 0.
         self._eps_scale = 1.
         self._eps_prime = 0.
-        self._sin_phi12 = 0.
-        self._sin_phi13 = 0.
-        self._sin_phi23 = 0.
+        self._phi12 = 0.
+        self._phi13 = 0.
+        self._phi23 = 0.
         self._alpha1 = 0.
         self._alpha2 = 0.
         self._deltansi = 0.
@@ -200,60 +200,36 @@ class OscParams(object):
     # --- projection phases ---
     # --- phi12 ---
     @property
-    def sin_phi12(self):
-        """1-2 phase"""
-        return self._sin_phi12
-
-    @sin_phi12.setter
-    def sin_phi12(self, value):
-        assert (abs(value) <= 1)
-        self._sin_phi12 = value
-
-    @property
     def phi12(self):
-        return np.arcsin(self.sin_phi12)
+        """1-2 angle"""
+        return self._phi12
 
     @phi12.setter
     def phi12(self, value):
-        self.sin_phi12 = np.sin(value)
+        assert value >= -np.pi and value <= np.pi
+        self._phi12 = value
 
     # --- phi13 ---
     @property
-    def sin_phi13(self):
-        """1-3 phase"""
-        return self._sin_phi13
-
-    @sin_phi13.setter
-    def sin_phi13(self, value):
-        assert (abs(value) <= 1)
-        self._sin_phi13 = value
-
-    @property
     def phi13(self):
-        return np.arcsin(self.sin_phi13)
+        """1-3 angle"""
+        return self._phi13
 
     @phi13.setter
     def phi13(self, value):
-        self.sin_phi13 = np.sin(value)
+        assert value >= -np.pi and value <= np.pi
+        self._phi13 = value
 
     # --- phi23 ---
     @property
-    def sin_phi23(self):
-        """2-3 phase"""
-        return self._sin_phi23
-
-    @sin_phi23.setter
-    def sin_phi23(self, value):
-        assert (abs(value) <= 1)
-        self._sin_phi23 = value
-
-    @property
     def phi23(self):
-        return np.arcsin(self.sin_phi23)
+        """2-3 angle"""
+        return self._phi23
 
     @phi23.setter
     def phi23(self, value):
-        self.sin_phi23 = np.sin(value)
+        assert value >= -np.pi and value <= np.pi
+        self._phi23 = value
 
     # --- vacuum-matter relative phases ---
     # --- alpha1 ---
@@ -321,13 +297,14 @@ class OscParams(object):
         return self.gen_mat_pot_matrix_complex[2, 2].real
 
     @property
-    def gen_mat_pot_matrix(self):
+    def gen_mat_pot_matrix_analytical(self):
         """Matter Hamiltonian without the matter parameter a=sqrt(2)G_F N_e"""
+        # Analytical relations. These are wrong right now! #FIXME
         pot = np.zeros((3, 3, 2), dtype=FTYPE)
 
-        sp12 = self.sin_phi12
-        sp13 = self.sin_phi13
-        sp23 = self.sin_phi23
+        sp12 = np.sin(self.phi12)
+        sp13 = np.sin(self.phi13)
+        sp23 = np.sin(self.phi23)
         cp12 = np.sqrt(1. - sp12**2)
         cp13 = np.sqrt(1. - sp13**2)
         cp23 = np.sqrt(1. - sp23**2)
@@ -441,14 +418,71 @@ class OscParams(object):
         return pot
 
     @property
-    def gen_mat_pot_matrix_complex(self):
+    def gen_mat_pot_matrix_complex_analytical(self):
         """General matter potential matrix as complex 2-d array"""
-        pot = self.gen_mat_pot_matrix
+        pot = self.gen_mat_pot_matrix_analytical
         pot_complex = pot[:, :, 0] + pot[:, :, 1] * 1.j
 
         # make sure this is a valid Hermitian potential matrix
         # before returning anything
-        assert np.array_equal(pot_complex, pot_complex.conj().T)
+        assert np.all(np.isclose(pot_complex, pot_complex.conj().T))
+
+        return pot_complex
+
+    @property
+    def gen_mat_pot_matrix_complex(self):
+        """General matter potential matrix as complex 2-d array"""
+        # numerical calculation for now...
+        # relative matter-nsi phases
+        Qrel = (
+            np.array([
+                complex(np.cos(self.alpha1), np.sin(self.alpha1)),
+                complex(np.cos(self.alpha2), np.sin(self.alpha2)),
+                complex(np.cos(-(self.alpha1 + self.alpha2)), np.sin(-(self.alpha1 + self.alpha2)))
+            ]) * np.eye(3, dtype=FTYPE)
+        )
+        # rotation matrices (signs as for PMNS matrix,
+        # also reproduce NSI global fit paper relations)
+        R12 = np.array(
+            [[np.cos(self.phi12), np.sin(self.phi12), 0],
+            [-np.sin(self.phi12), np.cos(self.phi12), 0],
+            [0, 0, 1]],
+            dtype=FTYPE
+        )
+        R13 = np.array(
+            [[np.cos(self.phi13), 0, np.sin(self.phi13)],
+            [0, 1, 0],
+            [-np.sin(self.phi13), 0, np.cos(self.phi13)]],
+            dtype=FTYPE
+        )
+        R23_complex = np.array(
+            [[1, 0, 0],
+            [0, np.cos(self.phi23), np.sin(self.phi23) * complex(np.cos(-self.deltansi), np.sin(-self.deltansi))],
+            [0, -np.sin(self.phi23) * complex(np.cos(self.deltansi), np.sin(self.deltansi)), np.cos(self.phi23)]],
+        )
+        # "matter mixing matrix"
+        Umat = np.matmul(R12, np.matmul(R13, R23_complex))
+        # Hmat eigenvalues
+        Dmat = np.array([self.eps_scale, self.eps_prime, 0], dtype=FTYPE) * np.eye(3, dtype=FTYPE)
+        # start from the innermost product, work your way outwards
+        Hmat = np.matmul(
+            Qrel,
+            np.matmul(Umat,
+                np.matmul(Dmat,
+                    np.matmul(Umat.conj().T, Qrel.conj().T)
+                )
+            )
+        )
+        # subtract mumu entry from diagonal entries (trace irrelevant)
+        pot_complex = Hmat - Hmat[1, 1] * np.eye(3, dtype=FTYPE)
+        # explicitly nullify imaginary parts of diagonal entries which
+        # are only there due to numerical inaccuracies
+        for i in xrange(3):
+            pot_complex[i, i] = pot_complex[i, i].real + 0 * 1.j
+
+        # make sure this is a valid Hermitian potential matrix
+        # before returning anything
+        assert np.all(np.isclose(pot_complex, pot_complex.conj().T))
 
         return pot_complex
 
@@ -574,8 +608,9 @@ class OscParams(object):
 
 def test_nsi_parameterization():
     alpha1, alpha2, deltansi = np.random.rand(3) * 2. * np.pi
-    phi12, phi13, phi23 = np.random.rand(3) * np.pi/2.
-    eps_scale, eps_prime = np.random.rand(2) * 10.
+    phi12, phi13, phi23 = np.random.rand(3) * 2*np.pi - np.pi
+    eps_max_abs = 10.0
+    eps_scale, eps_prime = np.random.rand(2) * 2 * eps_max_abs - eps_max_abs
     osc_params = OscParams()
     osc_params.eps_scale = eps_scale
     osc_params.eps_prime = eps_prime
@@ -585,66 +620,67 @@ def test_nsi_parameterization():
     osc_params.alpha1 = alpha1
     osc_params.alpha2 = alpha2
     osc_params.deltansi = deltansi
-    # relative matter-nsi phases
-    Qrel = (
-        np.array([
-            complex(np.cos(alpha1), np.sin(alpha1)),
-            complex(np.cos(alpha2), np.sin(alpha2)),
-            complex(np.cos(-(alpha1 + alpha2)), np.sin(-(alpha1 + alpha2)))
-        ]) * np.eye(3, dtype=FTYPE)
-    )
-    # rotation matrices in right-handed convention
-    R12 = np.array(
-        [[np.cos(phi12), -np.sin(phi12), 0],
-        [np.sin(phi12), np.cos(phi12), 0],
-        [0, 0, 1]],
-        dtype=FTYPE
-    )
-    R13 = np.array(
-        [[np.cos(phi13), 0, np.sin(phi13)],
-        [0, 1, 0],
-        [-np.sin(phi13), 0, np.cos(phi13)]],
-        dtype=FTYPE
-    )
-    R23_complex = np.array(
-        [[1, 0, 0],
-        [0, np.cos(phi23), -np.sin(phi23) * complex(np.cos(deltansi), np.sin(-deltansi))],
-        [0, np.sin(phi23) * complex(np.cos(deltansi), np.sin(deltansi)), np.cos(phi23)]],
-    )
-    # "matter mixing matrix"
-    Umat = np.matmul(R12, np.matmul(R13, R23_complex))
-    # Hmat eigenvalues
-    Dmat = np.array([eps_scale, eps_prime, 0], dtype=FTYPE) * np.eye(3, dtype=FTYPE)
-    # matter Hamiltonian from matrix multiplication vs. analytically
-    # start from the innermost product, work your way outwards
-    Hmat_ref = np.matmul(
-        Qrel,
-        np.matmul(Umat,
-            np.matmul(Dmat,
-                np.matmul(Umat.conj().T, Qrel.conj().T)
-            )
-        )
-    )
-    # subtract mumu entry from diagonal entries (trace irrelevant)
-    Hmat_ref = Hmat_ref - Hmat_ref[1, 1] * np.eye(3, dtype=FTYPE)
-    # already subtracted for class attribute
-    Hmat = osc_params.gen_mat_pot_matrix_complex
-    logging.info("Matter Hamiltonian from matrix multiplication:\n%s" % Hmat_ref)
-    logging.info("Analytical expansion:\n%s" % Hmat)
-    if not np.all(np.isclose(Hmat, Hmat_ref)):
-        raise ValueError(
-            'Evaluating analytical expressions for matter Hamiltonian elements'
-            ' does not give agreement with numerical calculation!'
-        )
 
-def test_sympy_mat_mult():
+    logging.info('Checking agreement between numerical and analytical Hmat...')
+
+    Hmat_numerical = osc_params.gen_mat_pot_matrix_complex
+    Hmat_analytical = osc_params.gen_mat_pot_matrix_complex_analytical
+
+    logging.info("Numerical matter Hamiltonian:\n%s" % Hmat_numerical)
+    logging.info("Analytical expansion (by hand):\n%s" % Hmat_analytical)
+    try:
+        close = np.isclose(Hmat_numerical, Hmat_analytical)
+        if not np.all(close):
+            raise ValueError(
+                'Evaluating analytical expressions for matter Hamiltonian elements'
+                ' does not give agreement with numerical calculation!'
+                ' Elementwise agreement:\n%s'
+                % close
+            )
+    except ValueError, e:
+        logging.error(str(e) + "...\nThis is expected."
+                      " Going ahead with numerical calculation for now.")
+
+    logging.info('Now checking agreement with sympy calculation...')
+
+    Hmat_sympy = test_sympy_mat_mult(
+        eps_scale_val = eps_scale,
+        eps_prime_val = eps_prime,
+        phi12_val = phi12,
+        phi13_val = phi13,
+        phi23_val = phi23,
+        alpha1_val = alpha1,
+        alpha2_val = alpha2,
+        deltansi_val = deltansi
+    )
+    logging.info('Sympy matter Hamiltonian:\n%s' % Hmat_sympy)
+    close = np.isclose(Hmat_numerical, Hmat_sympy)
+    if not np.all(close):
+        raise ValueError(
+            'Sympy and numerical calculations disagree! Elementwise agreement:\n'
+            '%s' % close
+        )
+    logging.info('<< PASS : test_nsi_parameterization >>')
+
+def test_sympy_mat_mult(
+        eps_scale_val, eps_prime_val,
+        phi12_val, phi13_val, phi23_val,
+        alpha1_val, alpha2_val,
+        deltansi_val
+    ):
     """
     Sympy calculation of generalised matter Hamiltonian.
-    Mainly for reference.
-
     """
-    from sympy import (cos, sin, Matrix, eye, I, Symbol, symbols)
+    from sympy import (
+        cos, sin,
+        Matrix, eye,
+        I, re, im,
+        Symbol, symbols,
+        factor, simplify, trigsimp,
+        init_printing
+    )
     from sympy.physics.quantum.dagger import Dagger
+    init_printing(use_unicode=True)
     phi12, phi13, phi23 = symbols('phi12 phi13 phi23', real=True)
     alpha1, alpha2 = symbols('alpha1 alpha2', real=True)
     eps_scale, eps_prime = symbols('eps_scale eps_prime', real=True)
@@ -659,8 +695,8 @@ def test_sympy_mat_mult():
         [0, 0, cos(-(alpha1 + alpha2)) + I * sin(-(alpha1 + alpha2))]]
     )
     R12 = Matrix(
-        [[cos(phi12), -sin(phi12), 0],
-        [sin(phi12), cos(phi12), 0],
+        [[cos(phi12), sin(phi12), 0],
+        [-sin(phi12), cos(phi12), 0],
         [0, 0, 1]]
     )
     R13 = Matrix(
@@ -670,8 +706,8 @@ def test_sympy_mat_mult():
     )
     R23_complex = Matrix(
         [[1, 0, 0],
-        [0, cos(phi23), -sin(phi23) * (cos(deltansi) + I * sin(-deltansi))],
-        [0, sin(phi23) * (cos(deltansi) + I * sin(deltansi)), cos(phi23)]]
+        [0, cos(phi23), sin(phi23) * (cos(deltansi) + I * sin(-deltansi))],
+        [0, -sin(phi23) * (cos(deltansi) + I * sin(deltansi)), cos(phi23)]]
     )
 
     Umat = R12 * R13 * R23_complex
@@ -679,8 +715,25 @@ def test_sympy_mat_mult():
     tmp2 = Dmat * tmp
     tmp3 = Umat * tmp2
     Hmat_sympy = Qrel * tmp3
+    # subtract constant * id
     Hmat_sympy_minus_mumu = Hmat_sympy - Hmat_sympy[1, 1] * eye(3)
-    return Hmat_sympy_minus_mumu
+    # simplify
+    Hmat_sympy_minus_mumu_simpl = simplify(Hmat_sympy_minus_mumu)
+    # evaluate
+    Hmat_sympy_minus_mumu_eval = Hmat_sympy_minus_mumu_simpl.subs(
+        [(eps_scale, eps_scale_val), (eps_prime, eps_prime_val),
+         (phi12, phi12_val), (phi13, phi13_val), (phi23, phi23_val),
+         (alpha1, alpha1_val), (alpha2, alpha2_val),
+         (deltansi, deltansi_val)]
+    )
+    # real part
+    Hmat_sympy_minus_mumu_eval_re = re(Hmat_sympy_minus_mumu_eval)
+    # imaginary part
+    Hmat_sympy_minus_mumu_eval_im = im(Hmat_sympy_minus_mumu_eval)
+
+    # complex numpy array
+    return (np.array(Hmat_sympy_minus_mumu_eval_re).astype(FTYPE) +
+            np.array(Hmat_sympy_minus_mumu_eval_im).astype(FTYPE) * 1.j)
 
 
 if __name__=='__main__':
@@ -689,7 +742,3 @@ if __name__=='__main__':
     assert TARGET == 'cpu', "Cannot test functions on GPU, set PISA_TARGET to 'cpu'"
     set_verbosity(1)
     test_nsi_parameterization()
-    try:
-        test_sympy_mat_mult()
-    except:
-        pass
