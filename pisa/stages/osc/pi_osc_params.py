@@ -523,7 +523,8 @@ class OscParams(object):
     @property
     def mix_matrix_complex(self):
         """Mixing matrix as complex 2-d array"""
-        return self.mix_matrix[:, :, 0] + self.mix_matrix[:, :, 1] * 1.j
+        mix = self.mix_matrix
+        return mix[:, :, 0] + mix[:, :, 1] * 1.j
 
     @property
     def mix_matrix_reparam(self):
@@ -574,8 +575,8 @@ class OscParams(object):
     @property
     def mix_matrix_reparam_complex(self):
         """Reparameterised mixing matrix as complex 2-d array"""
-        return (self.mix_matrix_reparam[:, :, 0]
-                + self.mix_matrix_reparam[:, :, 1] * 1.j)
+        mix_reparam = self.mix_matrix_reparam
+        return mix_reparam[:, :, 0] + mix_reparam[:, :, 1] * 1.j
 
     @property
     def dm_matrix(self):
