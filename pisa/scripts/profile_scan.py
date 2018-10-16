@@ -82,7 +82,8 @@ def profile_scan(init_args_d, return_outputs=False):
         scan_vals=scan_vals,
         profile=profile,
         nuisance_params=nuisance_params,
-        fix_params=fix_params
+        fix_params=fix_params,
+        return_res=return_outputs
     )
 
     #to_file(scan_res, 'out.json.bz2')

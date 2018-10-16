@@ -2228,7 +2228,7 @@ class HypoTesting(Analysis):
                         h1_param.is_fixed = False
 
     def hypo_scan(self, param_names, scan_vals, profile, nuisance_params=None,
-                  fix_params=None):
+                  fix_params=None, return_res=False):
         assert not self.blind # deal with blindess
         if nuisance_params and not profile:
             raise ValueError(
@@ -2321,7 +2321,8 @@ class HypoTesting(Analysis):
                 params.fix(param_to_fix)
 
         t0 = time.time()
-        results = {'scan_vals': {pname: [] for pname in param_names}, 'trials': []}
+        if return_res:
+            results = {'scan_vals': {pname: [] for pname in param_names}, 'trials': []}
 
         # Setup logging and things.
         self.setup_logging()
@@ -2356,13 +2357,14 @@ class HypoTesting(Analysis):
             mkdir(self.thisdata_dirpath)
 
             self.generate_data()
-            trial_results = {'data_dist': self.data_dist, 'results': []}
+            if return_res:
+                trial_results = {'data_dist': self.data_dist, 'results': []}
             for i, pos in enumerate(product(*steplist)):
                 pos_msg = ''
                 sep = ', '
                 for (pname, val) in pos:
                     params[pname].value = val
-                    if self.data_ind == self.data_start_ind:
+                    if self.data_ind == self.data_start_ind and return_res:
                         results['scan_vals'][pname].append(val)
                     if isinstance(val, float) or isinstance(val, ureg.Quantity):
                         if pos_msg:
@@ -2413,11 +2415,14 @@ class HypoTesting(Analysis):
                 self.log_fit(fit_info=self.h0_fit_to_data,
                              dirpath=self.thisdata_dirpath,
                              label=self.labels.h0_fit_to_data)
-                trial_results['results'].append(self.h0_fit_to_data)
-            results['trials'].append(trial_results)
+                if return_res:
+                    trial_results['results'].append(self.h0_fit_to_data)
+            if return_res:
+                results['trials'].append(trial_results)
             # At the end, reset the parameters in the maker
             self.reset_makers()
             # Also be sure to remove the data_dist and toy_data_asimov_dist
             # so that they are regenerated next time
             self.clear_data()
-        return results
+        if return_res:
+            return results
