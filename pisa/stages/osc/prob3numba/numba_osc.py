@@ -92,22 +92,19 @@ def get_H_mat(rho, mat_pot, nubar, H_mat):
     # 2*sqrt(2)*Gfermi in (eV^2-cm^3)/(mole-GeV)
     tworttwoGf = 1.52588e-4
     a = 0.5 * rho * tworttwoGf
-    if nubar == -1:
-        a = -a
 
     # standard matter interaction Hamiltonian
     clear_matrix(H_mat)
-    H_mat[0,0] = 0 # !!
+    H_mat[0, 0] = 0 # !!
 
     # Obtain effective generalised matter interaction Hamiltonian
-    fact = a
     for i in range(3):
         for j in range(3):
             # matter potential V -> -V* for anti-neutrinos
             if nubar == -1:
-                H_mat[i, j] = fact * mat_pot[i, j].conjugate()
+                H_mat[i, j] = -a * mat_pot[i, j].conjugate()
             elif nubar == 1:
-                H_mat[i, j] = fact * mat_pot[i, j]
+                H_mat[i, j] = a * mat_pot[i, j]
 
 def test_get_H_mat():
     rho = 1.

@@ -45,6 +45,7 @@ class pi_aeff(PiStage):
                            'aeff_scale',
                            'nutau_cc_norm',
                            'nutau_norm',
+                           'nue_norm',
                            'nu_nc_norm',
                           )
         input_names = ()
@@ -87,6 +88,7 @@ class pi_aeff(PiStage):
         livetime_s = self.params.livetime.m_as('sec')
         nutau_cc_norm = self.params.nutau_cc_norm.m_as('dimensionless')
         nutau_norm = self.params.nutau_norm.m_as('dimensionless')
+        nue_norm = self.params.nue_norm.m_as('dimensionless')
         nu_nc_norm = self.params.nu_nc_norm.m_as('dimensionless')
 
         for container in self.data:
@@ -97,6 +99,8 @@ class pi_aeff(PiStage):
                 scale *= nutau_norm
             if 'nc' in container.name:
                 scale *= nu_nc_norm
+            if 'nue' in container.name:
+                scale *= nue_norm
             vectorizer.multiply_and_scale(scale,
                                           container['weighted_aeff'],
                                           out=container['weights'],

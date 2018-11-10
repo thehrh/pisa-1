@@ -1,8 +1,9 @@
 """
 PISA pi stage for the calculation of earth layers and osc. probabilities
 
-Maybe it would amke sense to split this up into a seperate earth layer stage
-and an osc. stage....todo
+Maybe it would amke sense to split this up into a separate earth layer stage
+and an osc. stage....todo. Problem is how to enforce recalculation here based
+on whether something changed in that other stage.
 
 """
 from __future__ import absolute_import, print_function, division
@@ -14,6 +15,7 @@ from pisa import FTYPE, TARGET
 from pisa.core.pi_stage import PiStage
 from pisa.utils.log import logging
 from pisa.utils.profiler import profile
+from pisa.stages.osc.nsi_params import StdNSIParams, VacuumLikeNSIParams
 from pisa.stages.osc.pi_osc_params import OscParams
 from pisa.stages.osc.layers import Layers
 from pisa.stages.osc.prob3numba.numba_osc import propagate_array, fill_probs
@@ -23,9 +25,9 @@ from pisa.utils.resources import find_resource
 
 class pi_prob3(PiStage):
     """
-    prob3 osc PISA Pi class
+    Prob3-like oscillation PISA Pi class
 
-    Paramaters
+    Parameters
     ----------
     detector_depth : float
     earth_model : PREM file path
@@ -39,12 +41,20 @@ class pi_prob3(PiStage):
     deltam21 : quantity (mass^2)
     deltam31 : quantity (mass^2)
     deltacp : quantity (angle)
+    eps_scale : quantity(dimensionless)
+    eps_prime : quantity(dimensionless)
+    phi12 : quantity(angle)
+    phi13 : quantity(angle)
+    phi23 : quantity(angle)
+    alpha1 : quantity(angle)
+    alpha2 : quantity(angle)
+    deltansi : quantity(angle)
     eps_ee : quantity (dimensionless)
     eps_emu_magn : quantity (dimensionless)
     eps_emu_phase : quantity (angle)
     eps_etau_magn : quantity (dimensionless)
     eps_etau_phase : quantity (angle)
-    eps_mumu : quantity (dimensionless)
+    eps_mumu : quantity(dimensionless)
     eps_mutau_magn : quantity (dimensionless)
     eps_mutau_phase : quantity (angle)
     eps_tautau : quantity (dimensionless)
@@ -56,6 +66,7 @@ class pi_prob3(PiStage):
 
     """
     def __init__(self,
+                 nsi_type,
                  data=None,
                  params=None,
                  input_names=None,
@@ -65,6 +76,18 @@ class pi_prob3(PiStage):
                  calc_specs=None,
                  output_specs=None,
                 ):
+
+        # Check whether and if so with which NSI parameters we are to work.
+        if nsi_type is not None:
+            choices = ['standard', 'vacuum-like']
+            nsi_type = nsi_type.strip().lower()
+            if not nsi_type in choices:
+                raise ValueError(
+                    'Chosen NSI type "%s" not available! Choose one of %s.'
+                    % (nsi_type, choices)
+                )
+        self.nsi_type = nsi_type
+        """Type of NSI to assume."""
 
         expected_params = ('detector_depth',
                            'earth_model',
@@ -77,16 +100,32 @@ class pi_prob3(PiStage):
                            'theta23',
                            'deltam21',
                            'deltam31',
-                           'deltacp',
-                           'eps_scale',
-                           'eps_prime',
-                           'phi12',
-                           'phi13',
-                           'phi23',
-                           'alpha1',
-                           'alpha2',
-                           'deltansi'
+                           'deltacp'
         )
+        if self.nsi_type is None:
+            nsi_params = ()
+        elif self.nsi_type == 'vacuum-like':
+            nsi_params = ('eps_scale',
+                          'eps_prime',
+                          'phi12',
+                          'phi13',
+                          'phi23',
+                          'alpha1',
+                          'alpha2',
+                          'deltansi'
+            )
+        elif self.nsi_type == 'standard':
+            nsi_params = ('eps_ee',
+                          'eps_emu_magn',
+                          'eps_emu_phase',
+                          'eps_etau_magn',
+                          'eps_etau_phase',
+                          'eps_mumu',
+                          'eps_mutau_magn',
+                          'eps_mutau_phase',
+                          'eps_tautau'
+            )
+        expected_params = expected_params + nsi_params
 
         input_names = ()
         output_names = ()
@@ -124,6 +163,13 @@ class pi_prob3(PiStage):
 
         self.layers = None
         self.osc_params = None
+        self.nsi_params = None
+        # Note that the interaction potential (Hamiltonian) just scales with the
+        # electron density N_e for propagation through the Earth,
+        # even(to very good approx.) in the presence of generalised interactions
+        # (NSI), which is why we can simply treat it as a constant here.
+        self.gen_mat_pot_matrix_complex = None
+        """Interaction Hamiltonian without the factor sqrt(2)*G_F*N_e."""
         self.YeI = None
         self.YeO = None
         self.YeM = None
@@ -132,6 +178,12 @@ class pi_prob3(PiStage):
 
         # object for oscillation parameters
         self.osc_params = OscParams()
+        if self.nsi_type == 'vacuum-like':
+            logging.debug('Working in vacuum-like NSI parameterization.')
+            self.nsi_params = VacuumLikeNSIParams()
+        elif self.nsi_type == 'standard':
+            logging.debug('Working in standard NSI parameterization.')
+            self.nsi_params = StdNSIParams()
 
         # setup the layers
         #if self.params.earth_model.value is not None:
@@ -183,7 +235,7 @@ class pi_prob3(PiStage):
         ''' wrapper to execute osc. calc '''
         propagate_array(self.osc_params.dm_matrix, # pylint: disable = unexpected-keyword-arg, no-value-for-parameter
                         self.osc_params.mix_matrix_reparam_complex,
-                        self.osc_params.gen_mat_pot_matrix_complex,
+                        self.gen_mat_pot_matrix_complex,
                         nubar,
                         e_array.get(WHERE),
                         rho_array.get(WHERE),
@@ -224,14 +276,48 @@ class pi_prob3(PiStage):
         self.osc_params.dm21 = self.params.deltam21.value.m_as('eV**2')
         self.osc_params.dm31 = self.params.deltam31.value.m_as('eV**2')
         self.osc_params.deltacp = self.params.deltacp.value.m_as('rad')
-        self.osc_params.eps_scale = self.params.eps_scale.value.m_as('dimensionless')
-        self.osc_params.eps_prime = self.params.eps_prime.value.m_as('dimensionless')
-        self.osc_params.phi12 = self.params.phi12.value.m_as('rad')
-        self.osc_params.phi13 = self.params.phi13.value.m_as('rad')
-        self.osc_params.phi23 = self.params.phi23.value.m_as('rad')
-        self.osc_params.alpha1 = self.params.alpha1.value.m_as('rad')
-        self.osc_params.alpha2 = self.params.alpha2.value.m_as('rad')
-        self.osc_params.deltansi = self.params.deltansi.value.m_as('rad')
+        if self.nsi_type == 'vacuum-like':
+            self.nsi_params.eps_scale = self.params.eps_scale.value.m_as('dimensionless')
+            self.nsi_params.eps_prime = self.params.eps_prime.value.m_as('dimensionless')
+            self.nsi_params.phi12 = self.params.phi12.value.m_as('rad')
+            self.nsi_params.phi13 = self.params.phi13.value.m_as('rad')
+            self.nsi_params.phi23 = self.params.phi23.value.m_as('rad')
+            self.nsi_params.alpha1 = self.params.alpha1.value.m_as('rad')
+            self.nsi_params.alpha2 = self.params.alpha2.value.m_as('rad')
+            self.nsi_params.deltansi = self.params.deltansi.value.m_as('rad')
+        elif self.nsi_type == 'standard':
+            self.nsi_params.eps_ee = self.params.eps_ee.value.m_as('dimensionless')
+            self.nsi_params.eps_emu = (
+                (self.params.eps_emu_magn.value.m_as('dimensionless'),
+                self.params.eps_emu_phase.value.m_as('rad'))
+            )
+            self.nsi_params.eps_etau = (
+                (self.params.eps_etau_magn.value.m_as('dimensionless'),
+                self.params.eps_etau_phase.value.m_as('rad'))
+            )
+            self.nsi_params.eps_mumu = self.params.eps_mumu.value.m_as('dimensionless')
+            self.nsi_params.eps_mutau = (
+                (self.params.eps_mutau_magn.value.m_as('dimensionless'),
+                self.params.eps_mutau_phase.value.m_as('rad'))
+            )
+            self.nsi_params.eps_tautau = self.params.eps_tautau.value.m_as('dimensionless')
+
+        # now we can proceed to calculate the generalised matter potential matrix
+        std_mat_pot_matrix = np.zeros((3, 3), dtype=FTYPE) + 1.j * np.zeros((3, 3), dtype=FTYPE)
+        std_mat_pot_matrix[0, 0] += 1.0
+
+        # add effective nsi coupling matrix
+        if self.nsi_type is not None:
+            logging.debug('NSI matrix:\n%s' % self.nsi_params.eps_matrix)
+            self.gen_mat_pot_matrix_complex = (
+                std_mat_pot_matrix + self.nsi_params.eps_matrix
+            )
+            logging.debug('Using generalised matter potential:\n%s'
+                          % self.gen_mat_pot_matrix_complex)
+        else:
+            self.gen_mat_pot_matrix_complex = std_mat_pot_matrix
+            logging.debug('Using standard matter potential:\n%s'
+                          % self.gen_mat_pot_matrix_complex)
 
         for container in self.data:
             self.calc_probs(container['nubar'],
