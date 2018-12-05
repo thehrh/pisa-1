@@ -66,7 +66,8 @@ class pi_prob3(PiStage):
 
     """
     def __init__(self,
-                 nsi_type,
+                 nsi_type=None,
+                 reparam_mix_matrix=False,
                  data=None,
                  params=None,
                  input_names=None,
@@ -88,6 +89,12 @@ class pi_prob3(PiStage):
                 )
         self.nsi_type = nsi_type
         """Type of NSI to assume."""
+
+        self.reparam_mix_matrix = reparam_mix_matrix
+        """Use a PMNS mixing matrix parameterisation that differs from
+           the standard one by an overall phase matrix
+           diag(e^(i*delta_CP), 1, 1). This has no impact on
+           oscillation probabilities in the *absence* of NSI."""
 
         expected_params = ('detector_depth',
                            'earth_model',
@@ -178,6 +185,14 @@ class pi_prob3(PiStage):
 
         # object for oscillation parameters
         self.osc_params = OscParams()
+        if self.reparam_mix_matrix:
+            logging.debug(
+                'Working with reparameterizated version of mixing matrix.'
+            )
+        else:
+            logging.debug(
+                'Working with standard parameterization of mixing matrix.'
+            )
         if self.nsi_type == 'vacuum-like':
             logging.debug('Working in vacuum-like NSI parameterization.')
             self.nsi_params = VacuumLikeNSIParams()
@@ -233,8 +248,12 @@ class pi_prob3(PiStage):
 
     def calc_probs(self, nubar, e_array, rho_array, len_array, out):
         ''' wrapper to execute osc. calc '''
+        if self.reparam_mix_matrix:
+            mix_matrix = self.osc_params.mix_matrix_reparam_complex
+        else:
+            mix_matrix = self.osc_params.mix_matrix_complex
         propagate_array(self.osc_params.dm_matrix, # pylint: disable = unexpected-keyword-arg, no-value-for-parameter
-                        self.osc_params.mix_matrix_reparam_complex,
+                        mix_matrix,
                         self.gen_mat_pot_matrix_complex,
                         nubar,
                         e_array.get(WHERE),

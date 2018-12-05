@@ -6,6 +6,7 @@ Common tools for performing an analysis collected into a single class
 
 from __future__ import absolute_import, division
 
+import ast
 from collections import Mapping, OrderedDict, Sequence
 from copy import deepcopy
 from itertools import product
@@ -224,6 +225,7 @@ def apply_fit_settings(fit_settings, free_params):
             else:
                 if fit_method == 'pull':
                     prange = eval(prange)
+                prange_parsed = False
                 # need to convert from range and nvalues to linearly spaced
                 # values themselves
                 if isinstance(prange, basestring):
@@ -261,9 +263,12 @@ def apply_fit_settings(fit_settings, free_params):
                                 'Parameter "%s": Range spec needs to be of'
                                 ' format "nominal+/-..."' % pname
                             )
-                    nom = free_params[pname].nominal_value
-                    prange = [nom - half_range, nom + half_range]
-                elif isinstance(prange, Sequence):
+                        nom = free_params[pname].nominal_value
+                        prange = [nom - half_range, nom + half_range]
+                        prange_parsed = True
+                    else:
+                        prange = ast.literal_eval(prange)
+                if isinstance(prange, Sequence) and not prange_parsed:
                     #if not isinstance(prange, Sequence):
                     #    raise TypeError(
                     #        'Range specified for parameter "%s" is not'
@@ -275,8 +280,14 @@ def apply_fit_settings(fit_settings, free_params):
                             ' of length 2.' % (prange, pname)
                         )
                     for val in prange:
+                        val = Q_(val)
+                        """
                         try:
-                            val.ito(target_units)
+                            # FIXME: find a way to convert from string to list
+                            # when units are present, don't just assume
+                            # the vals are given in the target units
+                            val = val * target_units
+                            #val.ito(target_units)
                         except:
                             logging.error(
                                 'The units ("%s") specified for parameter "%s" are'
@@ -285,7 +296,9 @@ def apply_fit_settings(fit_settings, free_params):
                                 ' parameters.' % (val.units, pname, target_units)
                             )
                             raise
-                else:
+                        """
+                    prange_parsed = True
+                if not prange_parsed:
                     raise TypeError(
                         'Range "%s" specified for parameter "%s" is of "%s" which'
                         ' is unhandled.' % (prange, pname, type(prange))
