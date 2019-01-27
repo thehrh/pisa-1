@@ -156,16 +156,30 @@ class icc(Stage):
                     ' so still use def1 for it.'
                 )
                 l4_pass = np.all(l4==1)
+        # just some basic assertions
         assert (np.all(santa_doms>=3) and np.all(l3 == 1) and l4_pass and
                 np.all(l5 >= 0.1))
         corridor_doms_over_threshold = l6['corridor_doms_over_threshold']
 
+        # just some more assertions
         inverted_corridor_cut = corridor_doms_over_threshold > 1
         assert (np.all(inverted_corridor_cut) and
                 np.all(l6['santa_direct_doms'] >= 3) and
                 np.all(l6['mn_start_contained'] == 1.))
         if require_mn_stop_contained:
-            assert np.all(l6['mn_stop_contained'] == 1.)
+            mn_stop_contained = l6['mn_stop_contained']
+            if not np.all(l6['mn_stop_contained'] == 1.):
+                logging.info("Going to apply stopping containment cut.")
+            else:
+                logging.info("All events already satisfy stopping containment.")
+        else:
+            # raise here to give the user the chance to act on what we find
+            if np.all(l6['mn_stop_contained'] == 1.):
+                raise ValueError(
+                    "You did not require stopping containment, but all"
+                    " events satisfy the criterion. Set the requirement"
+                    " explicitly to proceed.")
+
 
         #load events
         if sim_ver == '4digit':
@@ -182,11 +196,31 @@ class icc(Stage):
             alt_reco_coszen_all = np.array(np.cos(alt_bg_file[variable]['zenith']))
             alt_pid_all = np.array(alt_bg_file['IC86_Dunkman_L6']['delta_LLH'])
             alt_l5 = alt_bg_file['IC86_Dunkman_L5']['bdt_score']
+            alt_l6 = alt_bg_file['IC86_Dunkman_L6']
+            alt_corridor_doms_over_threshold = alt_l6['corridor_doms_over_threshold']
+
+            # just some more assertions
+            alt_inverted_corridor_cut = alt_corridor_doms_over_threshold > 2
+            assert (np.all(alt_inverted_corridor_cut) and
+                    np.all(alt_l6['santa_direct_doms'] >= 3) and
+                    np.all(alt_l6['mn_start_contained'] == 1.))
+            # raise here to give the user the chance to act on what we find
+            if not require_mn_stop_contained:
+                if np.all(alt_l6['mn_stop_contained'] == 1.):
+                    raise ValueError(
+                        "You did not require stopping containment, but all"
+                        " events in the alt. bg. file satisfy the criterion."
+                        " Set the requirement explicitly to proceed."
+                    )
+            alt_mn_stop_contained = alt_l6['mn_stop_contained']
+
 
         # Cut: Only keep bdt score >= 0.2 (from MSU latest result, make data/MC
         # agree much better)
         cut_events = {}
-        cut = l5>=bdt_cut
+        cut = l5 >= bdt_cut
+        if require_mn_stop_contained:
+            cut = (l5 >= bdt_cut) & (mn_stop_contained == 1.)
         cut_events['reco_energy'] = reco_energy_all[cut]
         cut_events['reco_coszen'] = reco_coszen_all[cut]
         cut_events['pid'] = pid_all[cut]
@@ -196,6 +230,8 @@ class icc(Stage):
             # data/MC agree much better)
             alt_cut_events = {}
             alt_cut = alt_l5>=bdt_cut
+            if require_mn_stop_contained:
+                alt_cut = (alt_l5 >= bdt_cut) & (alt_mn_stop_contained == 1.)
             alt_cut_events['reco_energy'] = alt_reco_energy_all[alt_cut]
             alt_cut_events['reco_coszen'] = alt_reco_coszen_all[alt_cut]
             alt_cut_events['pid'] = alt_pid_all[alt_cut]

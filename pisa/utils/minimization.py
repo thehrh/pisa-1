@@ -571,7 +571,8 @@ def run_minimizer(fun, x0, bounds, random_state,
             hypo_maker, data_dist, metric, counter, fit_history,
             pprint, blind
         )
-
+    else:
+        raise ValueError("No minimizer routine selected!")
     return optimize_result
 
 

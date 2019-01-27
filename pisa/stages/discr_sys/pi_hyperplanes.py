@@ -125,10 +125,10 @@ class pi_hyperplanes(PiStage):
         self.fit_results = from_file(self.fit_results_file)
         self.fit_binning_hash = self.fit_results.get('binning_hash', None)
         if not self.fit_binning_hash:
-            raise KeyError(
+            logging.warn(
                 'Cannot determine the hash of the binning employed'
                 ' for the hyperplane fits. Correct application of'
-                ' fits would not be guaranteed!'
+                ' fits is not guaranteed!'
             )
 
         self.data.data_specs = self.calc_specs
@@ -158,11 +158,11 @@ class pi_hyperplanes(PiStage):
 
         # check compatibility
         if self.data.data_mode == 'binned':
-            # let's be extremely strict here for now: require
+            # let's not be extremely strict here for now: don't require
             # the absolutely identical binning (full hash)
             binning_hash = self.data.data_specs.hash
             if not binning_hash == self.fit_binning_hash:
-                raise ValueError(
+                logging.warn(
                     'Disagreeing hash values between fit binning and the'
                     ' one to be used in the application of the hyperplane'
                     ' fits!'

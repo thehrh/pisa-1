@@ -72,7 +72,11 @@ def get_H_mat(rho, mat_pot, nubar, H_mat):
     Parameters:
     -----------
     rho : float
-        density
+        electron number density (in moles/cm^3)
+        (numerically, this is just the product of
+        electron fraction and mass density in g/cm^3,
+        since the number of grams per cm^3 corresponds to
+        the number of moles of nucleons per cm^3)
 
     mat_pot : complex 2-d array
         general matter potential flavor structure
@@ -449,6 +453,8 @@ def get_transition_matrix(nubar,
     nubar : int
 
     energy : float
+
+    rho : float
 
     baseline : float
 

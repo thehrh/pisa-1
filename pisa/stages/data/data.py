@@ -59,7 +59,9 @@ class data(Stage):
         expected_params = (
             'data_file',
             'sim_ver',
-            'bdt_cut'
+            'bdt_cut',
+            'require_mn_stop_contained',
+            'blind'
         )
 
         output_names = ('total')
@@ -86,6 +88,8 @@ class data(Stage):
         data_file_name = self.params.data_file.value
         sim_version = self.params.sim_ver.value
         bdt_cut = self.params.bdt_cut.value.m_as('dimensionless')
+        require_mn_stop_contained = self.params.require_mn_stop_contained.value
+        blind = self.params.blind.value
 
         self.bin_names = self.output_binning.names
 
@@ -128,22 +132,45 @@ class data(Stage):
         l3 = data_file['IC86_Dunkman_L3']['value']
         l4 = data_file['IC86_Dunkman_L4']['result']
         l5 = data_file['IC86_Dunkman_L5']['bdt_score']
+        l6 = data_file['IC86_Dunkman_L6']
+        mn_start_contained = l6['mn_start_contained']
+        mn_stop_contained = l6['mn_stop_contained']
+        corridor_doms_over_threshold = l6['corridor_doms_over_threshold']
         assert(np.all(santa_doms>=3) and np.all(l3 == 1) and np.all(l5 >= 0.1))
 
-        # l4==1 was not applied when i3 files were written to hdf5 files, so do
-        # it here
-        dLLH = dLLH[l4==1]
-        reco_energy_all = reco_energy_all[l4==1]
-        reco_coszen_all = reco_coszen_all[l4==1]
-        l5 = l5[l4==1]
-        L6_result = L6_result[l4==1]
+        if not np.all(l4 == 1):
+            logging.info("Applying L4 cut manually (since it apparently didn't"
+                         " get applied when i3 files were written to hdf5).")
+            dLLH = dLLH[l4==1]
+            reco_energy_all = reco_energy_all[l4==1]
+            reco_coszen_all = reco_coszen_all[l4==1]
+            l5 = l5[l4==1]
+            L6_result = L6_result[l4==1]
+            mn_start_contained = mn_start_contained[l4==1]
+            mn_stop_contained = mn_stop_contained[l4==1]
+            corridor_doms_over_threshold = corridor_doms_over_threshold[l4==1]
+        else:
+            logging.info("All events pass L4. No need to apply it manually.")
         data_file.close()
 
-        dLLH_L6 = dLLH[L6_result==1]
-        l5 = l5[L6_result==1]
-        reco_energy_L6 = reco_energy_all[L6_result==1]
-        reco_coszen_L6 = reco_coszen_all[L6_result==1]
-        #print "after L6 cut, no. of burn sample = ", len(reco_coszen_L6)
+        if require_mn_stop_contained:
+            # we apply the regular l6 cut
+            #assert np.all(mn_stop_contained == 1.)# not applied
+            logging.info("Applying regular DRAGON L6 cut.")
+            L6_passed = np.where(L6_result == 1)
+        else:
+            # we don't require stopping containment, just the remaining
+            # L6 criteria
+            logging.info("Not requiring L6 stopping containment -> applying"
+                         " L6 cut without it.")
+            # this means we need to ensure that the i3 -> hdf5 conversion
+            # didn't actually apply the stopping containment in the first place
+            assert not np.all(mn_stop_contained == 1.)
+            L6_passed = (mn_start_contained == 1.) & (corridor_doms_over_threshold <= 1)
+        dLLH_L6 = dLLH[L6_passed]
+        l5 = l5[L6_passed]
+        reco_energy_L6 = reco_energy_all[L6_passed]
+        reco_coszen_L6 = reco_coszen_all[L6_passed]
 
         # Cut: Only keep bdt score >= 0.2 (from MSU latest result, make data/MC
         # agree much better); if use no such further cut, use bdt_cut = 0.1
@@ -157,12 +184,17 @@ class data(Stage):
         cut_events['reco_coszen'] = reco_coszen_L6[cut]
         cut_events['pid'] = dLLH_L6[cut]
 
+        if not blind:
+            logging.info("after L6 cut, sample size = %s" % len(cut_events['pid']))
+
         hist, _ = np.histogramdd(sample = np.array(
             [cut_events[bin_name] for bin_name in self.bin_names]
         ).T, bins=self.bin_edges)
 
         maps = [Map(name=self.output_names[0], hist=hist,
                     binning=self.output_binning)]
+        if not blind:
+            logging.info("within bin bounds, sample size = %s" % maps[0].num_entries)
         self.template = MapSet(maps, name='data')
 
     def _compute_outputs(self, inputs=None):
