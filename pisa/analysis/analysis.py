@@ -833,10 +833,7 @@ class Analysis(object):
 
         blind : bool
             Whether to carry out a blind analysis. This hides actual parameter
-            values from display and disallows these (as well as Jacobian,
-            Hessian, etc.) from ending up in logfiles. It also resets the hypo
-            maker's parameters to their nominal states, to prevent these from
-            violating blindness when this method is run interactively.
+            values from display.
 
 
         Returns
@@ -1252,26 +1249,23 @@ class Analysis(object):
             minimizer_time*1000./min_counter.count
         )
 
-        # Record minimizer metadata (all info besides 'x' and 'fun'; also do
-        # not record some attributes if performing blinded analysis)
+        # Record minimizer metadata (all info besides 'x' and 'fun')
+        # Record all data even for blinded analysis
         metadata = OrderedDict()
         for k in sorted(optimize_result.keys()):
-            if blind and k in ['jac', 'hess', 'hess_inv']:
-                continue
+            #if blind and k in ['jac', 'hess', 'hess_inv']:
+            #    continue
             metadata[k] = optimize_result[k]
 
         fit_info = OrderedDict()
         fit_info['metric'] = metric
         fit_info['metric_val'] = metric_val
-        if blind:
-            hypo_maker.reset_free()
-            fit_info['params'] = ParamSet()
-        else:
-            fit_info['params'] = deepcopy(hypo_maker.params)
+        #if blind:
+        #    hypo_maker.reset_free()
+        fit_info['params'] = deepcopy(hypo_maker.params)
         fit_info['detailed_metric_info'] = self.get_detailed_metric_info(
             data_dist=data_dist, hypo_asimov_dist=hypo_asimov_dist,
-            params=hypo_maker.params, metric=metric, other_metrics=other_metrics,
-            blind=blind
+            params=hypo_maker.params, metric=metric, other_metrics=other_metrics
         )
         fit_info['fit_time'] = minimizer_time * ureg.sec
         # store the no. of distributions for this minimization process
@@ -1279,13 +1273,13 @@ class Analysis(object):
         fit_info['fit_metadata'] = metadata
         fit_info['fit_history'] = fit_history
         # If blind replace hypo_asimov_dist with none object
-        if blind:
-            hypo_asimov_dist = None
+        #if blind:
+        #    hypo_asimov_dist = None
         fit_info['hypo_asimov_dist'] = hypo_asimov_dist
 
         msg = optimize_result.message
-        if blind:
-            msg = ''
+        #if blind:
+        #    msg = ''
 
         if hasattr(optimize_result, 'success'):
             if not optimize_result.success:
@@ -1373,19 +1367,18 @@ class Analysis(object):
 
         fit_info['fit_time'] = fit_t * ureg.sec
 
-        if blind:
-            hypo_maker.reset_free()
-            fit_info['params'] = ParamSet()
-        else:
-            fit_info['params'] = hypo_maker.params
+        #if blind:
+        #    hypo_maker.reset_free()
+        #    fit_info['params'] = ParamSet()
+        #else:
+        fit_info['params'] = deepcopy(hypo_maker.params)
         fit_info['detailed_metric_info'] = self.get_detailed_metric_info(
             data_dist=data_dist, hypo_asimov_dist=best_fit_hypo_dist,
-            params=hypo_maker.params, metric=metric, other_metrics=other_metrics,
-            blind=blind
+            params=hypo_maker.params, metric=metric, other_metrics=other_metrics
         )
         fit_info['num_distributions_generated'] = pull_counter.count
-        if blind:
-            best_fit_hypo_dist = None
+        #if blind:
+        #    best_fit_hypo_dist = None
         fit_info['hypo_asimov_dist'] = best_fit_hypo_dist
 
         return fit_info
@@ -1436,27 +1429,26 @@ class Analysis(object):
 
         fit_info['metric_val'] = metric_val
 
-        if blind:
-            fit_info['params'] = ParamSet()
-        else:
-            fit_info['params'] = deepcopy(hypo_params)
+        #if blind:
+        #    fit_info['params'] = ParamSet()
+        #else:
+        fit_info['params'] = deepcopy(hypo_params)
         fit_info['detailed_metric_info'] = self.get_detailed_metric_info(
             data_dist=data_dist, hypo_asimov_dist=hypo_asimov_dist,
-            params=hypo_params, metric=metric, other_metrics=other_metrics,
-            blind=blind
+            params=hypo_params, metric=metric, other_metrics=other_metrics
         )
         fit_info['fit_time'] = fit_t * ureg.sec
         fit_info['num_distributions_generated'] = 1
         fit_info['fit_metadata'] = OrderedDict()
         # If blind replace hypo_asimov_dist with none object
-        if blind:
-            hypo_asimov_dist = None
+        #if blind:
+        #    hypo_asimov_dist = None
         fit_info['hypo_asimov_dist'] = hypo_asimov_dist
         return fit_info
 
     @staticmethod
     def get_detailed_metric_info(data_dist, hypo_asimov_dist, params, metric,
-                                 other_metrics=None, blind=False):
+                                 other_metrics=None):
         """Get detailed fit information, including e.g. maps that yielded the
         metric.
 
@@ -1467,7 +1459,6 @@ class Analysis(object):
         params
         metric
         other_metrics
-        blind
 
         Returns
         -------
@@ -1498,10 +1489,7 @@ class Analysis(object):
                 )
                 maps_binned.append(map_binned)
             name_vals_d['maps_binned'] = MapSet(maps_binned)
-            # do not record param priors in case of blind analysis
-            priors_penalties = (
-                params.priors_penalties(metric=metric) if not blind else None
-            )
+            priors_penalties = params.priors_penalties(metric=metric)
             name_vals_d['priors'] = priors_penalties
             detailed_metric_info[m] = name_vals_d
         return detailed_metric_info
@@ -1602,10 +1590,10 @@ class Analysis(object):
 
         counter += 1
 
-        if not blind:
-            fit_history.append(
-                [metric_val] + [v.value.m for v in hypo_maker.params.free]
-            )
+        #if not blind:
+        fit_history.append(
+            [metric_val] + [v.value.m for v in hypo_maker.params.free]
+        )
 
         return sign*metric_val
 

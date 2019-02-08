@@ -706,7 +706,7 @@ class HypoTesting(Analysis):
             assert isinstance(extra_param_selections, Sequence)
             for selection in extra_param_selections:
                 for regular_param_selections in\
-                    (self.h0_param_selections, self.h1_param_selections):
+                    (h0_param_selections, h1_param_selections):
                     if isinstance(regular_param_selections, Sequence):
                         if selection in regular_param_selections:
                             raise ValueError(
@@ -2229,7 +2229,6 @@ class HypoTesting(Analysis):
 
     def hypo_scan(self, param_names, scan_vals, profile, nuisance_params=None,
                   fix_params=None, return_res=False):
-        assert not self.blind # deal with blindess
         if nuisance_params and not profile:
             raise ValueError(
                 'Nuisance parameters specified, but "profile" is not set!'
@@ -2377,7 +2376,9 @@ class HypoTesting(Analysis):
                             "how to deal with in the output "
                             "messages."% type(val)
                         )
-                logging.info('Working on hypo point ' + pos_msg)
+                if not self.blind:
+                    # might not want to know about this...
+                    logging.info('Working on hypo point ' + pos_msg)
                 self.h0_maker.update_params(params)
 
                 self.labels = Labels(
