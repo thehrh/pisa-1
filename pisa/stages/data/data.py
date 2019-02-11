@@ -13,9 +13,9 @@ from pisa.utils.comparisons import normQuant
 from pisa.utils.resources import find_resource
 
 
-__author__ = 'P. Eller'
+__author__ = 'P. Eller, T. Ehrhardt'
 
-__license__ = '''Copyright (c) 2014-2017, The IceCube Collaboration
+__license__ = '''Copyright (c) 2014-2019, The IceCube Collaboration
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -110,7 +110,8 @@ class data(Stage):
             Reco_Track_Name = 'IC86_Dunkman_L6_MultiNest8D_PDG_Track'
         elif sim_version == "5digit" or sim_version=="dima":
             Reco_Neutrino_Name = 'IC86_Dunkman_L6_PegLeg_MultiNest8D_NumuCC'
-            Reco_Track_Name = 'IC86_Dunkman_L6_PegLeg_MultiNest8D_Track'
+            # unused
+            #Reco_Track_Name = 'IC86_Dunkman_L6_PegLeg_MultiNest8D_Track'
         else:
             raise ValueError(
                 'only allow 4digit, 5digit(H2 model for hole ice) or'
@@ -124,15 +125,16 @@ class data(Stage):
         reco_coszen_all = np.array(np.cos(
             data_file[Reco_Neutrino_Name]['zenith']
         ))
-        reco_trck_len_all = np.array(data_file[Reco_Track_Name]['length'])
+        # unused
+        #reco_trck_len_all = np.array(data_file[Reco_Track_Name]['length'])
         #print "before L6 cut, no. of burn sample = ", len(reco_coszen_all)
 
         # sanity check
-        santa_doms = data_file['IC86_Dunkman_L6_SANTA_DirectDOMs']['value']
         l3 = data_file['IC86_Dunkman_L3']['value']
         l4 = data_file['IC86_Dunkman_L4']['result']
         l5 = data_file['IC86_Dunkman_L5']['bdt_score']
         l6 = data_file['IC86_Dunkman_L6']
+        santa_doms = l6['santa_direct_doms']
         mn_start_contained = l6['mn_start_contained']
         mn_stop_contained = l6['mn_stop_contained']
         corridor_doms_over_threshold = l6['corridor_doms_over_threshold']
