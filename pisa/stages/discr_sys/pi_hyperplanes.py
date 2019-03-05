@@ -76,17 +76,14 @@ class pi_hyperplanes(PiStage):
         output_names = ()
 
         # what are keys added or altered in the calculation used during apply
-        # TODO: this is not being used
-        output_calc_keys = ('hyperplane_scalefactors')
+        input_calc_keys = ()
+        output_calc_keys = ('hyperplane_scalefactors',)
         # what keys are added or altered for the outputs during apply
-        if error_method in ['sumw2']:
-            output_apply_keys = ('weights',
-                                 'errors',
-                                )
+        if error_method == 'sumw2':
+            output_apply_keys = ('weights', 'errors')
             input_apply_keys = output_apply_keys
         else:
-            output_apply_keys = ('weights',
-                                )
+            output_apply_keys = ('weights',)
             input_apply_keys = output_apply_keys
 
         # init base class
@@ -100,6 +97,8 @@ class pi_hyperplanes(PiStage):
                                              input_specs=input_specs,
                                              calc_specs=calc_specs,
                                              output_specs=output_specs,
+                                             input_calc_keys=input_calc_keys,
+                                             output_calc_keys=output_calc_keys,
                                              input_apply_keys=input_apply_keys,
                                              output_apply_keys=output_apply_keys,
                                             )

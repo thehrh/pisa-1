@@ -566,7 +566,7 @@ class Map(object):
     def plot(self, evtrate=True, symm=False, logx=False, logy=False, logz=False,
              fig=None, ax=None,
              title=None, outdir=None, fname=None, backend='pdf', fmt='pdf',
-             cmap=None, fig_kw=None, plt_kw=None, vmax=None, clabel=None,
+             cmap=None, fig_kw=None, plt_kw=None, vmin=None, vmax=None, clabel=None,
              clabelsize=None, xlabelsize=None, ylabelsize=None,
              titlesize=None):
         """Simple plot of a 2D map.
@@ -649,6 +649,8 @@ class Map(object):
 
         if vmax is not None:
             vmax_ = vmax
+        if vmin is not None:
+            vmin_ = vmin
 
         X, Y = np.meshgrid(x, y)
         pcmesh = ax.pcolormesh(
@@ -1393,6 +1395,27 @@ class Map(object):
 
         return np.sum(stats.chi2(actual_values=self.hist,
                                  expected_values=expected_values))
+
+    def signed_sqrt_mod_chi2(self, expected_values):
+        """Calculate the binwise (signed) square-root of the modified chi2 value
+        between this map and the map described by `expected_values`; self is
+        taken to be the "actual values" (or (pseudo)data), and `expected_values`
+        are the expectation values for each bin.
+
+        Parameters
+        ----------
+        expected_values : numpy.ndarray or Map of same dimension as this.
+
+
+        Returns
+        -------
+        m_pulls : signed_sqrt_mod_chi2
+
+        """
+        expected_values = reduceToHist(expected_values)
+
+        return stats.signed_sqrt_mod_chi2(actual_values=self.hist,
+                                          expected_values=expected_values)
 
     def metric_total(self, expected_values, metric):
         # TODO: should this use reduceToHist as in chi2 and llh above?
