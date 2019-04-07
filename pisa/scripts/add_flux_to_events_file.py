@@ -37,6 +37,8 @@ __license__ = '''Copyright (c) 2014-2017, The IceCube Collaboration
  limitations under the License.'''
 
 def add_fluxes_to_file(data_file_path, flux_table, flux_name,
+                       true_energy_key='true_energy',
+                       true_coszen_key='true_coszen',
                        outdir=None, label=None, overwrite=False):
     """Add fluxes to PISA events file (e.g. for use by an mc stage)
     
@@ -45,6 +47,8 @@ def add_fluxes_to_file(data_file_path, flux_table, flux_name,
     data_file_path : string
     flux_table
     flux_name
+    true_energy_key : string
+    true_coszen_key : string
     outdir : string or None
         If None, output is to the same directory as `data_file_path`
     overwrite : bool, optional
@@ -82,15 +86,15 @@ def add_fluxes_to_file(data_file_path, flux_table, flux_name,
             # Input data may have one layer of hierarchy before the event variables (e.g. [numu_cc]), 
             # or for older files there maybe be a second layer (e.g. [numu][cc]).
             # Handling either case here...
-            if "true_energy" in primary_node :
+            if true_energy_key in primary_node :
                 secondary_nodes = [primary_node]
             else :
                 secondary_nodes = primary_node.values()
 
             for secondary_node in secondary_nodes :
 
-                true_e = secondary_node['true_energy']
-                true_cz = secondary_node['true_coszen']
+                true_e = secondary_node[true_energy_key]
+                true_cz = secondary_node[true_coszen_key]
 
                 # calculate all 4 fluxes (nue, nuebar, numu and numubar)
                 for table in ['nue', 'nuebar', 'numu', 'numubar']:
@@ -121,6 +125,14 @@ def parse_args(description=__doc__):
         "flux/honda-2015-spl-solmin-aa.d"'''
     )
     parser.add_argument(
+        '--true-energy-key', type=str, default='true_energy',
+        help='''Specify field name corresponding to true energy.'''
+    )
+    parser.add_argument(
+        '--true-coszen-key', type=str, default='true_coszen',
+        help='''Specify field name corresponding to true cosine zenith.'''
+    )
+    parser.add_argument(
         '--outdir', metavar='DIR', default=None,
         help='''Directory to save the output to; if none is provided, output is
         placed in same dir as --input.'''
@@ -142,6 +154,8 @@ def main():
     """Run `add_fluxes_to_file` function with arguments from command line"""
     args = parse_args()
     set_verbosity(args.v)
+    true_energy_key = args.true_energy_key
+    true_coszen_key = args.true_coszen_key
 
     flux_table = load_2d_table(args.flux_file)
     flux_file_bname, ext = splitext(basename(args.flux_file))
@@ -192,6 +206,8 @@ def main():
             data_file_path=filepath,
             flux_table=flux_table,
             flux_name='nominal',
+            true_energy_key=true_energy_key,
+            true_coszen_key=true_coszen_key,
             outdir=args.outdir,
             label=flux_file_bname
         )
