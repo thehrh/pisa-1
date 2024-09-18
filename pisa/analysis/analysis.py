@@ -962,7 +962,7 @@ class BasicAnalysis(object):
     # TODO: Defer sub-fits to cluster
     def fit_recursively(
             self, data_dist, hypo_maker, metric, external_priors_penalty,
-            method, method_kwargs=None, local_fit_kwargs=None
+            method, force_fit=False, method_kwargs=None, local_fit_kwargs=None
         ):
         """Recursively apply global search strategies with local sub-fits.
 
@@ -1031,7 +1031,7 @@ class BasicAnalysis(object):
             assert len(metric) == 1
 
         # Check if the hypo matches data
-        if hypo_maker.__class__.__name__ != "Detectors" and data_dist.allclose(hypo_asimov_dist) :
+        if hypo_maker.__class__.__name__ != "Detectors" and data_dist.allclose(hypo_asimov_dist) and not force_fit:
 
             msg = 'Initial hypo matches data, no need for fit'
             logging.info(msg)
@@ -1267,6 +1267,9 @@ class BasicAnalysis(object):
         reset_free = True
         if "reset_free" in method_kwargs.keys():
             reset_free = method_kwargs["reset_free"]
+        store_grid_steps = False
+        if "store_grid_steps" in method_kwargs.keys():
+            store_grid_steps = method_kwargs["store_grid_steps"]
         fix_grid_params = False
         if "fix_grid_params" in method_kwargs.keys():
             fix_grid_params = method_kwargs["fix_grid_params"]
@@ -1321,11 +1324,33 @@ class BasicAnalysis(object):
                     update_param_values_detector(hypo_maker, mod_param, update_is_fixed=True)
                 else:
                     update_param_values(hypo_maker, mod_param, update_is_fixed=True)
-            new_fit_info = self.fit_recursively(
-                data_dist, hypo_maker, metric, external_priors_penalty,
-                local_fit_kwargs["method"], local_fit_kwargs["method_kwargs"],
-                local_fit_kwargs["local_fit_kwargs"]
-            )
+            if fix_grid_params and local_fit_kwargs is None:
+                # we clearly don't want to run any local fit
+                if isinstance(metric, str):
+                    metric = [metric]
+                hypo_asimov_dist = hypo_maker.get_outputs(return_sum=True)
+                local_metric_val = (
+                    data_dist.metric_total(expected_values=hypo_asimov_dist, metric=metric[0])
+                    + hypo_maker.params.priors_penalty(metric=metric[0])
+                )
+                new_fit_info = HypoFitResult(
+                    metric=metric,
+                    metric_val=local_metric_val,
+                    data_dist=data_dist,
+                    hypo_maker=hypo_maker,
+                    minimizer_time=0.,
+                    minimizer_metadata={},
+                    fit_history=None,
+                    other_metrics=None,
+                    num_distributions_generated=1,
+                    include_detailed_metric_info=True,
+                )
+            else:
+                new_fit_info = self.fit_recursively(
+                    data_dist, hypo_maker, metric, external_priors_penalty,
+                    local_fit_kwargs["method"], local_fit_kwargs["method_kwargs"],
+                    local_fit_kwargs["local_fit_kwargs"]
+                )
             all_fit_results.append(new_fit_info)
         for param in originally_free:
             hypo_maker.params[param].is_fixed = False
@@ -1367,7 +1392,9 @@ class BasicAnalysis(object):
                 method_kwargs["refined_fit"]["local_fit_kwargs"]
             )
 
-        return best_fit_result
+        if not store_grid_steps:
+            return best_fit_result
+        return best_fit_result, all_fit_results
 
     def _fit_constrained(self, data_dist, hypo_maker, metric,
                          external_priors_penalty, method_kwargs, local_fit_kwargs):

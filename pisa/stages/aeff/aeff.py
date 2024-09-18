@@ -25,9 +25,8 @@ class aeff(Stage):  # pylint: disable=invalid-name
 
             livetime : Quantity with time units
             aeff_scale : dimensionless Quantity
-            nutau_cc_norm : dimensionless Quantity
-            nutau_norm : dimensionless Quantity
-            nu_nc_norm : dimensionless Quantity
+            nu*_cc_norm : dimensionless Quantity
+            nu*_nc_norm : dimensionelss Quantity
 
     """
     def __init__(
@@ -37,9 +36,13 @@ class aeff(Stage):  # pylint: disable=invalid-name
         expected_params = (
             'livetime',
             'aeff_scale',
+            'nue_cc_norm',
+            'nuebar_cc_norm',
+            'numu_cc_norm',
+            'numubar_cc_norm',
+            'nutaubar_cc_norm',
             'nutau_cc_norm',
-            'nutau_norm',
-            'nu_nc_norm',
+            'nunubar_nc_norm',
         )
 
         # init base class
@@ -55,18 +58,30 @@ class aeff(Stage):  # pylint: disable=invalid-name
         # read out
         aeff_scale = self.params.aeff_scale.m_as('dimensionless')
         livetime_s = self.params.livetime.m_as('sec')
+        nue_cc_norm = self.params.nue_cc_norm.m_as('dimensionless')
+        nuebar_cc_norm = self.params.nuebar_cc_norm.m_as('dimensionless')
+        numu_cc_norm = self.params.numu_cc_norm.m_as('dimensionless')
+        numubar_cc_norm = self.params.numubar_cc_norm.m_as('dimensionless')
         nutau_cc_norm = self.params.nutau_cc_norm.m_as('dimensionless')
-        nutau_norm = self.params.nutau_norm.m_as('dimensionless')
-        nu_nc_norm = self.params.nu_nc_norm.m_as('dimensionless')
+        nutaubar_cc_norm = self.params.nutaubar_cc_norm.m_as('dimensionless')
+        nunubar_nc_norm = self.params.nunubar_nc_norm.m_as('dimensionless')
 
         for container in self.data:
             scale = aeff_scale * livetime_s
-            if container.name in ['nutau_cc', 'nutaubar_cc']:
+            if container.name == 'nue_cc':
+                scale *= nue_cc_norm
+            elif container.name == 'nuebar_cc':
+                scale *= nuebar_cc_norm
+            elif container.name == 'numu_cc':
+                scale *= numu_cc_norm
+            elif container.name == 'numubar_cc':
+                scale *= numubar_cc_norm
+            elif container.name == 'nutau_cc':
                 scale *= nutau_cc_norm
-            if 'nutau' in container.name:
-                scale *= nutau_norm
-            if 'nc' in container.name:
-                scale *= nu_nc_norm
+            elif container.name == 'nutaubar_cc':
+                scale *= nutaubar_cc_norm
+            elif 'nc' in container.name:
+                scale *= nunubar_nc_norm
 
             container['weights'] *= container['weighted_aeff'] * scale
             container.mark_changed('weights')
