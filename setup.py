@@ -32,6 +32,8 @@ import os
 import shutil
 import subprocess
 import tempfile
+import re
+from setuptools.command.egg_info import egg_info as _egg_info
 
 from setuptools.command.build_ext import build_ext
 from setuptools import setup, Extension, find_packages
@@ -217,6 +219,40 @@ class CustomBuildExt(build_ext):
         self.include_dirs.append(numpy.get_include())
 
 
+class EggInfo(_egg_info):
+    """EggInfo subclass: sanitize generated .egg-info/requires.txt so requirement
+    parsers (Dependabot, etc.) can read it even if setup() contained PEP 508
+    VCS requirements that some packagers write with slightly odd spacing."""
+    def run(self):
+        super().run()
+        # locate the generated .egg-info directory
+        for name in os.listdir('.'):
+            if name.endswith('.egg-info') and os.path.isdir(name):
+                reqfile = os.path.join(name, 'requires.txt')
+                if os.path.exists(reqfile):
+                    with open(reqfile, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+
+                    new_lines = []
+                    for line in lines:
+                        # Stop when we hit an extras section like "[develop]"
+                        if line.strip().startswith('['):
+                            break
+                        # Normalize spacing around @ (PEP 508): "name @ git+..."
+                        # This turns things like "kde@ git+..." or "kde @  git+..." into "kde @ git+..."
+                        line = re.sub(r'\s*@\s*', ' @ ', line)
+                        # Collapse runs of multiple spaces to a single space (defensive)
+                        line = re.sub(r' {2,}', ' ', line)
+                        # Strip trailing whitespace and skip blank lines
+                        if line.strip() == '':
+                            continue
+                        new_lines.append(line.rstrip() + '\n')
+
+                    with open(reqfile, 'w', encoding='utf-8') as f:
+                        f.writelines(new_lines)
+                break
+
+
 def do_setup():
     """Perform the setup process"""
     #setup_cc()
@@ -285,6 +321,8 @@ def do_setup():
 
     cmdclasses = {'build': CustomBuild, 'build_ext': CustomBuildExt}
     cmdclasses.update(versioneer.get_cmdclass())
+    # register our egg_info post-processor so generated metadata is normalized
+    cmdclasses['egg_info'] = EggInfo
 
     # Now do the actual work
     setup(
