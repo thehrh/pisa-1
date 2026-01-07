@@ -11,7 +11,7 @@ numpy<1.23,>=1.17
 pint<=0.19
 scipy<1.14,>=1.6
 pandas
-simplejson==3.18.4
+simplejson==3.20.2
 tables
 tabulate
 uncertainties
