@@ -19,7 +19,7 @@ llvmlite
 py-cpuinfo
 sympy
 cython~=0.29.0
-scikit-learn<=1.1.2
+scikit-learn<=1.8.0
 pyarrow
 tqdm
 daemonflux>=0.8.0
