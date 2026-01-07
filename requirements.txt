@@ -7,7 +7,7 @@ iminuit>=2
 line_profiler
 matplotlib>=3.0
 numba>=0.53
-numpy<1.23,>=1.17
+numpy>=1.17,<2.5
 pint<=0.19
 scipy<1.14,>=1.6
 pandas
