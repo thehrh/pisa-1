@@ -18,7 +18,7 @@ uncertainties
 llvmlite
 py-cpuinfo
 sympy
-cython~=0.29.0
+cython~=3.2.4
 scikit-learn<=1.1.2
 pyarrow
 tqdm
