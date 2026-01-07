@@ -1,0 +1,26 @@
+decorator
+kde @ git+https://github.com/icecubeopensource/kde.git
+fast-histogram>=0.10
+nlopt
+h5py
+iminuit>=2
+line_profiler
+matplotlib>=3.0
+numba>=0.53
+numpy<1.23,>=1.17
+pint<=0.19
+scipy<1.14,>=1.6
+pandas
+simplejson==3.18.4
+tables
+tabulate
+uncertainties
+llvmlite
+py-cpuinfo
+sympy
+cython~=0.29.0
+scikit-learn<=1.1.2
+pyarrow
+tqdm
+daemonflux>=0.8.0
+packaging
