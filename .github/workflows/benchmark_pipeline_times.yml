@@ -54,6 +54,23 @@ jobs:
         run: |
           python pisa/scripts/benchmark_pipeline_performance.py
 
+      - name: Debug - Check benchmark output files
+        run: |
+          echo "Current working directory: $(pwd)"
+          echo ""
+          echo "Contents of benchmark_results/ (if exists):"
+          if [ -d benchmark_results ]; then
+            ls -la benchmark_results/
+            echo ""
+            echo "Content of JSON file:"
+            cat benchmark_results/results_target_${{ matrix.config.target }}_nthreads_${{ matrix.config.nthreads }}.json
+          else
+            echo "benchmark_results/ directory not found!"
+            echo ""
+            echo "Searching for JSON files in repository:"
+            find . -name "*.json" -type f 2>/dev/null | head -20
+          fi
+
       # Note: In case matrix jobs pushing simultaneously to gh-pages causes conflicts or other issues, move this to a sequential
       # "push-results" job (would need to download all artifacts into benchmark_results first and then execute this action)
       - name: Upload benchmark results
