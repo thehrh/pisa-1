@@ -85,8 +85,8 @@ jobs:
           # Access token to deploy GitHub Pages branch
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
-          gh-pages-branch: "gh-pages"
-          benchmark-data-dir-path: "dev/bench"
+          gh-pages-branch: "master"
+          benchmark-data-dir-path: "docs/source/dev/bench"
           # no alert-threshold, comment-on-alert, fail-on-alert, or comment-always, as these are useless without a pull_request trigger
 
       - name: Upload benchmark results as artifact
