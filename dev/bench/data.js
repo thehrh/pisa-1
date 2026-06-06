@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780759072120,
+  "lastUpdate": 1780759117245,
   "repoUrl": "https://github.com/thehrh/pisa-1",
   "entries": {
     "Benchmark": [
@@ -487,6 +487,51 @@ window.BENCHMARK_DATA = {
             "range": "0.005387783050537109",
             "unit": "s",
             "extra": "target=parallel, nthreads=4"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "thehrh@users.noreply.github.com",
+            "name": "T Ehrhardt",
+            "username": "thehrh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4ba0b1b1febde26298e5402ad02476fe02d3225f",
+          "message": "For another benchmark: change PISA_HIST_THREADING from 'off' to 'auto'",
+          "timestamp": "2026-06-06T17:14:29+02:00",
+          "tree_id": "50de1dedb7694cc0603094796d495559055d2eaa",
+          "url": "https://github.com/thehrh/pisa-1/commit/4ba0b1b1febde26298e5402ad02476fe02d3225f"
+        },
+        "date": 1780759115723,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "IceCube_3y_neutrinos_daemon (cpu, nthreads=1)",
+            "value": 1.1841175604839713,
+            "range": "0.18922734260559082",
+            "unit": "s",
+            "extra": "target=cpu, nthreads=1"
+          },
+          {
+            "name": "IceCube_3y_neutrinos (cpu, nthreads=1)",
+            "value": 0.9096315296328797,
+            "range": "0.14211368560791016",
+            "unit": "s",
+            "extra": "target=cpu, nthreads=1"
+          },
+          {
+            "name": "IceCube_3y_muons (cpu, nthreads=1)",
+            "value": 0.0005286177810357542,
+            "range": "0.004286050796508789",
+            "unit": "s",
+            "extra": "target=cpu, nthreads=1"
           }
         ]
       }
