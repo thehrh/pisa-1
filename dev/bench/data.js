@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780961824227,
+  "lastUpdate": 1781108542782,
   "repoUrl": "https://github.com/thehrh/pisa-1",
   "entries": {
     "Benchmark": [
@@ -708,6 +708,51 @@ window.BENCHMARK_DATA = {
             "range": "0.006043910980224609",
             "unit": "s",
             "extra": "target=cpu, nthreads=1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "thehrh@users.noreply.github.com",
+            "name": "T Ehrhardt",
+            "username": "thehrh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5fcd3b2bec7d5939efb8828a0891b25168f468e1",
+          "message": "Enable fetching tags in documentation workflow\n\nAdded fetch-tags option to checkout action.",
+          "timestamp": "2026-06-10T18:18:53+02:00",
+          "tree_id": "b0f306c0b5a112e8a5981c2c052f75ba1b5e5241",
+          "url": "https://github.com/thehrh/pisa-1/commit/5fcd3b2bec7d5939efb8828a0891b25168f468e1"
+        },
+        "date": 1781108541535,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "IceCube_3y_neutrinos_daemon (parallel, nthreads=4)",
+            "value": 0.9020059887243776,
+            "range": "0.2208702564239502",
+            "unit": "s",
+            "extra": "target=parallel, nthreads=4"
+          },
+          {
+            "name": "IceCube_3y_neutrinos (parallel, nthreads=4)",
+            "value": 0.38001127632296816,
+            "range": "0.18778228759765625",
+            "unit": "s",
+            "extra": "target=parallel, nthreads=4"
+          },
+          {
+            "name": "IceCube_3y_muons (parallel, nthreads=4)",
+            "value": 0.0004968643188476562,
+            "range": "0.0055806636810302734",
+            "unit": "s",
+            "extra": "target=parallel, nthreads=4"
           }
         ]
       }
