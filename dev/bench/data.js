@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782922188600,
+  "lastUpdate": 1782922862309,
   "repoUrl": "https://github.com/thehrh/pisa-1",
   "entries": {
     "Benchmark": [
@@ -888,6 +888,51 @@ window.BENCHMARK_DATA = {
             "range": "0.004644632339477539",
             "unit": "s",
             "extra": "target=cpu, nthreads=1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "thehrh@users.noreply.github.com",
+            "name": "T Ehrhardt",
+            "username": "thehrh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "708733ffaf1ab0927ce1809790de453e70ec527e",
+          "message": "Update documentation workflow\n\nEnsure version string in documentation starts with the most recent tag by fetching full history",
+          "timestamp": "2026-07-01T18:17:34+02:00",
+          "tree_id": "4448613663d84c00c163f5d4b8a4fa834e8ddc3e",
+          "url": "https://github.com/thehrh/pisa-1/commit/708733ffaf1ab0927ce1809790de453e70ec527e"
+        },
+        "date": 1782922860395,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "IceCube_3y_neutrinos_daemon (parallel, nthreads=4)",
+            "value": 0.9027925802736866,
+            "range": "0.20483851432800293",
+            "unit": "s",
+            "extra": "target=parallel, nthreads=4"
+          },
+          {
+            "name": "IceCube_3y_neutrinos (parallel, nthreads=4)",
+            "value": 0.4025664134901397,
+            "range": "0.17558693885803223",
+            "unit": "s",
+            "extra": "target=parallel, nthreads=4"
+          },
+          {
+            "name": "IceCube_3y_muons (parallel, nthreads=4)",
+            "value": 0.0005560018578354193,
+            "range": "0.0053060054779052734",
+            "unit": "s",
+            "extra": "target=parallel, nthreads=4"
           }
         ]
       }
