@@ -7,7 +7,7 @@
         <link rel="prefetch" href="_static/pisa4_logo_transparent.png" as="image">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>pisa.scripts package - PISA 4.2.99 documentation</title>
+        <title>pisa.scripts package - PISA 0+untagged.1.g74fadc6 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -164,7 +164,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">PISA 4.2.99 documentation</div></a>
+      <a href="index.html"><div class="brand">PISA 0+untagged.1.g74fadc6 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -188,7 +188,7 @@
     <img class="sidebar-logo" src="_static/pisa4_logo_transparent.png" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">PISA 4.2.99 documentation</span>
+  <span class="sidebar-brand-text">PISA 0+untagged.1.g74fadc6 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -406,7 +406,8 @@ time from a profiled pipeline.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pisa.scripts.benchmark_pipeline_performance.write_benchmark_json">
 <span class="sig-prename descclassname"><span class="pre">pisa.scripts.benchmark_pipeline_performance.</span></span><span class="sig-name descname"><span class="pre">write_benchmark_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit_sha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit_msg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pisa/scripts/benchmark_pipeline_performance.html#write_benchmark_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pisa.scripts.benchmark_pipeline_performance.write_benchmark_json" title="Link to this definition">¶</a></dt>
-<dd><p>Write benchmark results to JSON file in github-action-benchmark format.</p>
+<dd><p>Write benchmark results to JSON file in github-action-benchmark format.
+Adds timestamp and possibly commit information for improved manual tracking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -424,7 +425,7 @@ time from a profiled pipeline.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Note: The github-action-benchmark tool expects the JSON file to contain
+<p>The github-action-benchmark tool expects the JSON file to contain
 only the array of results, not a wrapper object. Timestamp and commit
 information are not included in the output file but can be added back
 if needed for other purposes.</p>
@@ -1194,7 +1195,7 @@ Will do both.</p></li>
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=8a5efb01"></script>
+</div><script src="_static/documentation_options.js?v=fc6bae24"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
