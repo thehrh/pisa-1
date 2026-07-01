@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782922146990,
+  "lastUpdate": 1782922188600,
   "repoUrl": "https://github.com/thehrh/pisa-1",
   "entries": {
     "Benchmark": [
@@ -843,6 +843,51 @@ window.BENCHMARK_DATA = {
             "range": "0.006555080413818359",
             "unit": "s",
             "extra": "target=parallel, nthreads=4"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "thehrh@users.noreply.github.com",
+            "name": "T Ehrhardt",
+            "username": "thehrh"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "74fadc6de62f7ba523dffe88accb8801845e7d76",
+          "message": "transition to major release tags in docker workflow for consistency (#961)",
+          "timestamp": "2026-07-01T15:23:22+02:00",
+          "tree_id": "e4464ac8ca79259b9256b211ab7d4b9fcfe2400d",
+          "url": "https://github.com/thehrh/pisa-1/commit/74fadc6de62f7ba523dffe88accb8801845e7d76"
+        },
+        "date": 1782922186221,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "IceCube_3y_neutrinos_daemon (cpu, nthreads=1)",
+            "value": 1.2705554816187645,
+            "range": "0.19530153274536133",
+            "unit": "s",
+            "extra": "target=cpu, nthreads=1"
+          },
+          {
+            "name": "IceCube_3y_neutrinos (cpu, nthreads=1)",
+            "value": 0.9365366575669269,
+            "range": "0.15086603164672852",
+            "unit": "s",
+            "extra": "target=cpu, nthreads=1"
+          },
+          {
+            "name": "IceCube_3y_muons (cpu, nthreads=1)",
+            "value": 0.0005536468661561304,
+            "range": "0.004644632339477539",
+            "unit": "s",
+            "extra": "target=cpu, nthreads=1"
           }
         ]
       }
