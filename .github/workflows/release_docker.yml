@@ -1,20 +1,44 @@
 # Workflow adapted from https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images#publishing-images-to-github-packages
 name: Create and publish a Docker image
 
-# Run when a release or pre-release is published or when triggered manually
+# Run on a weekly schedule (Monday morning UTC), when a release or pre-release is published, and when triggered manually
 on:
   release:
     types: [published]
+  schedule:
+    #- cron: '45 0 * * 1'
+    - cron: '25 17 * * 1'
+      timezone: "UTC"
   workflow_dispatch:
 
-# Two custom environment variables for the workflow, which are used for the Container registry domain (here: GitHub packages), and a name for the Docker image
+# Three custom environment variables for the workflow: Container registry domain (here: GitHub packages), name for the Docker image, name for the scheduled tag
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  SCHED_TAG: weekly
 
 jobs:
+  cleanup-old-sched:
+    runs-on: ubuntu-latest
+    # Only runs cleanup for scheduled builds
+    if: github.event_name == 'schedule'
+    permissions:
+      packages: write
+    steps:
+      - name: Delete old scheduled images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: ${{ env.IMAGE_NAME }}
+          package-type: 'container'
+          num-old-versions-to-delete: 0
+          delete-only-tags: ${{ env.SCHED_TAG }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   build-and-push-image:
     runs-on: ubuntu-latest
+    # only run when cleanup is successful or skipped
+    if: needs.cleanup-old-sched.result == 'success' || needs.cleanup-old-sched.result == 'skipped'
+    needs: cleanup-old-sched
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
@@ -39,6 +63,12 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ env.SCHED_TAG }},enable={{github.event_name == 'schedule'}}
+            type=raw,value=manual-${{ github.run_number }},enable=${{ github.event_name == 'workflow_dispatch' }}
       # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
       # It uses the `context` parameter to define the build's context as the set of files located in the specified path.
       # For more information, see [Usage](https://github.com/docker/build-push-action#usage) in the README of the `docker/build-push-action` repository.
