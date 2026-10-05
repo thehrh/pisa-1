@@ -7,7 +7,7 @@ on:
     types: [published]
   schedule:
     #- cron: '45 0 * * 1'
-    - cron: '25 17 * * 1'
+    - cron: '45 17 * * 1'
       timezone: "UTC"
   workflow_dispatch:
 
@@ -37,7 +37,7 @@ jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
     # only run when cleanup is successful or skipped
-    if: needs.cleanup-old-sched.result == 'success' || needs.cleanup-old-sched.result == 'skipped'
+    if: always() && (needs.cleanup-old-sched.result == 'success' || needs.cleanup-old-sched.result == 'skipped')
     needs: cleanup-old-sched
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
