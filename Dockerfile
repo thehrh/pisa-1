@@ -12,11 +12,11 @@ FROM debian:trixie-slim
 RUN <<EOT
 apt-get update
 apt-get install -y gcc curl git
-curl -Lf https://astral.sh/uv/install.sh | sh
+UV_NO_MODIFY_PATH=1 curl -Lf https://astral.sh/uv/install.sh | sh
 EOT
 
 # Add uv executable to path and set PISA path (will remain available in container)
-ENV PATH=/root/.local/bin/:$PATH PISA=pisa/
+ENV PATH=/root/.local/bin:$PATH PISA=pisa/
 
 # Create PISA source folder
 RUN mkdir -p $PISA
